@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/BE.Domain.Share/">
+    <Project Path="BE.Domain.Share/BE.Domain.Shared.csproj" />
+  </Folder>
+  <Project Path="ApiGateway/ApiGateway.csproj" />
+  <Project Path="AuthApi/AuthApi.csproj" />
+  <Project Path="BE.Application.Contracts/BE.Application.Contracts.csproj" />
+  <Project Path="BE.Application/BE.Application.csproj" />
+  <Project Path="BE.Domain.Mysql/BE.Domain.Mysql.csproj" />
+  <Project Path="BE.Domain/BE.Domain.csproj" />
+  <Project Path="BE.HostBase/BE.HostBase.csproj" />
+  <Project Path="BusinessApi/BusinessApi.csproj" />
+  <Project Path="HandleWorker/HandleWorker.csproj" />
+  <Project Path="OrderApi/OrderApi.csproj" />
+</Solution>

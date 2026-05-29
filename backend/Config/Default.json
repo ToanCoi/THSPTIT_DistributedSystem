@@ -1,0 +1,25 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "Default": "Server=localhost;Database=master_db;User=root;Password=P@ssw0rd123;",
+    "BusinessConnection": "Server=localhost;Database=business_db;User=root;Password=P@ssw0rd123;"
+  },
+  "Jwt": {
+    "SecretKey": "Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026",
+    "Issuer": "Ecom.AuthApi",
+    "Audience": "Ecom.Client",
+    "AccessTokenExpireMinutes": 60,
+    "RefreshTokenExpireDays": 7
+  },
+  "Kafka": {
+    "BootstrapServers": "localhost:9092",
+    "Topic": "order-created",
+    "GroupId": "handle-worker-group"
+  }
+}

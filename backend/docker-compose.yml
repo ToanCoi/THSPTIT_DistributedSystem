@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+  # MySQL Database for master_db (Auth)
+  mysql-master:
+    image: mysql:8.0
+    container_name: ecom-mysql-master
+    environment:
+      MYSQL_ROOT_PASSWORD: P@ssw0rd123
+      MYSQL_DATABASE: master_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_master_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MySQL Database for business_db
+  mysql-business:
+    image: mysql:8.0
+    container_name: ecom-mysql-business
+    environment:
+      MYSQL_ROOT_PASSWORD: P@ssw0rd123
+      MYSQL_DATABASE: business_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_business_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: ecom-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  # Kafka Broker
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: ecom-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway (Port 5000)
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ApiGateway/Dockerfile
+    container_name: ecom-api-gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Jwt__SecretKey=Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026
+      - Jwt__Issuer=Ecom.AuthApi
+      - Jwt__Audience=Ecom.Client
+      - Services__AuthApi=http://auth-api:5001
+      - Services__BusinessApi=http://business-api:5002
+      - Services__OrderApi=http://order-api:5003
+    depends_on:
+      - auth-api
+      - business-api
+      - order-api
+
+  # Auth API (Port 5001)
+  auth-api:
+    build:
+      context: .
+      dockerfile: AuthApi/Dockerfile
+    container_name: ecom-auth-api
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Server=mysql-master;Database=master_db;User=root;Password=P@ssw0rd123;
+      - Jwt__SecretKey=Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026
+      - Jwt__Issuer=Ecom.AuthApi
+      - Jwt__Audience=Ecom.Client
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+
+  # Business API (Port 5002)
+  business-api:
+    build:
+      context: .
+      dockerfile: BusinessApi/Dockerfile
+    container_name: ecom-business-api
+    ports:
+      - "5002:5002"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__BusinessConnection=Server=mysql-business;Database=business_db;User=root;Password=P@ssw0rd123;
+      - Jwt__SecretKey=Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026
+      - Jwt__Issuer=Ecom.AuthApi
+      - Jwt__Audience=Ecom.Client
+    depends_on:
+      mysql-business:
+        condition: service_healthy
+
+  # Order API (Port 5003)
+  order-api:
+    build:
+      context: .
+      dockerfile: OrderApi/Dockerfile
+    container_name: ecom-order-api
+    ports:
+      - "5003:5003"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__BusinessConnection=Server=mysql-business;Database=business_db;User=root;Password=P@ssw0rd123;
+      - Jwt__SecretKey=Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026
+      - Jwt__Issuer=Ecom.AuthApi
+      - Jwt__Audience=Ecom.Client
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__Topic=order-created
+    depends_on:
+      mysql-business:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # Handle Worker (Kafka Consumer)
+  handle-worker:
+    build:
+      context: .
+      dockerfile: HandleWorker/Dockerfile
+    container_name: ecom-handle-worker
+    environment:
+      - ConnectionStrings__BusinessConnection=Server=mysql-business;Database=business_db;User=root;Password=P@ssw0rd123;
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__GroupId=handle-worker-group
+      - Kafka__Topic=order-created
+    depends_on:
+      mysql-business:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+volumes:
+  mysql_master_data:
+  mysql_business_data:
