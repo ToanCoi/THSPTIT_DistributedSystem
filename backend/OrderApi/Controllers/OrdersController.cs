@@ -1,3 +1,4 @@
+using BE.Application.Contracts.Dtos;
 using BE.Application.Contracts.Interfaces.Order;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,18 @@ namespace OrderApi.Controllers
         }
 
         /// <summary>
+        /// Lấy danh sách phân trang
+        /// </summary>
+        /// <param name="filter">Filter phân trang</param>
+        /// <returns>Danh sách phân trang</returns>
+        [HttpGet("paging")]
+        public async Task<IActionResult> GetAllPaging([FromQuery] PagingFilterDto filter)
+        {
+            var result = await _orderService.GetAllPagingAsync(filter);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Lấy đơn hàng theo ID
         /// </summary>
         /// <param name="id">ID đơn hàng</param>
@@ -70,6 +83,19 @@ namespace OrderApi.Controllers
         public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusDto dto)
         {
             var result = await _orderService.UpdateStatusAsync(id, dto.status);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Cập nhật đơn hàng đầy đủ
+        /// </summary>
+        /// <param name="id">ID đơn hàng</param>
+        /// <param name="dto">Thông tin đơn hàng</param>
+        /// <returns>Đơn hàng đã cập nhật</returns>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] OrderCreateDto dto)
+        {
+            var result = await _orderService.UpdateAsync(id, dto);
             return Ok(result);
         }
     }

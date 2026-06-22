@@ -6,6 +6,11 @@ export const useInwardStore = defineStore('inward', () => {
   const inwards = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const pagination = ref({
+    total: 0,
+    skip: 0,
+    take: 20
+  })
 
   const fetchAll = async () => {
     loading.value = true
@@ -13,6 +18,23 @@ export const useInwardStore = defineStore('inward', () => {
     try {
       const response = await inwardApi.getAll()
       inwards.value = response.data
+    } catch (err) {
+      error.value = err.message
+      console.error('Failed to fetch inwards:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchPaging = async (filter = { skip: 0, take: 20, sort_field: 'created_date', sort_order: 'DESC' }) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await inwardApi.getPaging(filter)
+      inwards.value = response.data.data
+      pagination.value.total = response.data.total
+      pagination.value.skip = filter.skip
+      pagination.value.take = filter.take
     } catch (err) {
       error.value = err.message
       console.error('Failed to fetch inwards:', err)
@@ -31,7 +53,9 @@ export const useInwardStore = defineStore('inward', () => {
     inwards,
     loading,
     error,
+    pagination,
     fetchAll,
+    fetchPaging,
     create
   }
 })

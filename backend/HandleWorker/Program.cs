@@ -1,17 +1,17 @@
 using BE.Application.Contracts.Interfaces.Ledger;
 using BE.Domain.DI.Ledger;
 using BE.Domain.Mysql;
-using HandleWorker;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
 using System.Text;
 using Confluent.Kafka;
+using Workers.LedgerWorker;
 
 var builder = Host.CreateApplicationBuilder(args);
 
 // Cấu hình NLog
-var config = new LoggingConfiguration();
+var logConfig = new LoggingConfiguration();
 var logDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
 Directory.CreateDirectory(logDirectory);
 
@@ -20,8 +20,14 @@ var fileTarget = new FileTarget("logfile")
     FileName = Path.Combine(logDirectory, "${shortdate}.log"),
     Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}"
 };
-config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
-LogManager.Configuration = config;
+var consoleTarget = new ConsoleTarget("logconsole")
+{
+    Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}",
+    StdErr = true
+};
+logConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+logConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, consoleTarget);
+LogManager.Configuration = logConfig;
 
 var logger = NLog.LogManager.GetCurrentClassLogger();
 logger.Info("HandleWorker starting...");
@@ -36,7 +42,13 @@ builder.Services.AddScoped<ILedgerRepo>(sp => new LedgerRepo(connectionString));
 // Đăng ký Ledger service
 builder.Services.AddScoped<ILedgerService, LedgerService>();
 
-// Đăng ký Kafka consumer
+// Đăng ký Kafka consumer với config
+builder.Services.AddSingleton(sp => new KafkaConsumerSettings
+{
+    BootstrapServers = builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9093",
+    Topic = builder.Configuration["Kafka:Topic"] ?? "order-created",
+    GroupId = builder.Configuration["Kafka:GroupId"] ?? "handle-worker-group"
+});
 builder.Services.AddHostedService<KafkaConsumerService>();
 
 var host = builder.Build();
@@ -51,30 +63,30 @@ public class KafkaConsumerService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<KafkaConsumerService> _logger;
+    private readonly KafkaConsumerSettings _settings;
     private IConsumer<string, string> _consumer;
-    private readonly string _topic = "order-created";
-    private readonly string _groupId = "handle-worker-group";
 
-    public KafkaConsumerService(IServiceProvider serviceProvider, ILogger<KafkaConsumerService> logger)
+    public KafkaConsumerService(IServiceProvider serviceProvider, ILogger<KafkaConsumerService> logger, KafkaConsumerSettings settings)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _settings = settings;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var consumerConfig = new ConsumerConfig
         {
-            BootstrapServers = "localhost:9092",
-            GroupId = _groupId,
+            BootstrapServers = _settings.BootstrapServers,
+            GroupId = _settings.GroupId,
             AutoOffsetReset = AutoOffsetReset.Earliest,
             EnableAutoCommit = true
         };
 
         _consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-        _consumer.Subscribe(_topic);
+        _consumer.Subscribe(_settings.Topic);
 
-        _logger.LogInformation("Kafka consumer started, listening to topic [{topic}]", _topic);
+        _logger.LogInformation("Kafka consumer started, listening to topic [{topic}]", _settings.Topic);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -122,6 +134,7 @@ public class KafkaConsumerService : BackgroundService
                 await ledgerService.ProcessOrderItemAsync(
                     Guid.Parse(orderMessage.order_id),
                     Guid.Parse(item.product_id),
+                    Guid.Parse(orderMessage.stock_id),
                     item.quantity,
                     item.unit_price
                 );
@@ -137,6 +150,13 @@ public class KafkaConsumerService : BackgroundService
     }
 }
 
+public class KafkaConsumerSettings
+{
+    public string BootstrapServers { get; set; } = "localhost:9093";
+    public string Topic { get; set; } = "order-created";
+    public string GroupId { get; set; } = "handle-worker-group";
+}
+
 /// <summary>
 /// Class parsed từ Kafka message
 /// </summary>
@@ -145,6 +165,7 @@ public class OrderCreatedMessage
     public string order_id { get; set; }
     public string customer_id { get; set; }
     public string order_code { get; set; }
+    public string stock_id { get; set; }
     public List<OrderItemMessage> items { get; set; } = new();
     public string timestamp { get; set; }
 }

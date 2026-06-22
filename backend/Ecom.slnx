@@ -10,6 +10,10 @@
   <Project Path="BE.Domain/BE.Domain.csproj" />
   <Project Path="BE.HostBase/BE.HostBase.csproj" />
   <Project Path="BusinessApi/BusinessApi.csproj" />
-  <Project Path="HandleWorker/HandleWorker.csproj" />
+  <Folder Name="/Workers/">
+    <Project Path="Workers/Workers.Shared/Workers.Shared.csproj" />
+    <Project Path="Workers/LedgerWorker/LedgerWorker.csproj" />
+    <Project Path="Workers/VoucherWorker/VoucherWorker.csproj" />
+  </Folder>
   <Project Path="OrderApi/OrderApi.csproj" />
 </Solution>

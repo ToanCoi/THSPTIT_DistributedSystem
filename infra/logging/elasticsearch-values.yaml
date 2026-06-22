@@ -1,0 +1,39 @@
+# Values override cho chart elastic/elasticsearch - dùng cho local minikube.
+# Tắt security (HTTPS + auth) để đơn giản hoá dev; chỉ chạy 1 replica, heap nhỏ.
+
+replicas: 1
+
+# Giảm heap xuống 512m để tránh OOM trên máy local
+esJavaOpts: "-Xms512m -Xmx512m"
+
+# Tắt security plugin (HTTP + auth)
+elasticsearch.yml: |
+  cluster.name: "ecom-logs"
+  network.host: 0.0.0.0
+  discovery.type: single-node
+  xpack.security.enabled: false
+  xpack.security.enrollment.enabled: false
+  xpack.security.http.ssl:
+    enabled: false
+  xpack.security.transport.ssl:
+    enabled: false
+    verification_mode: none
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+# Tắt anti-affinity để 1 node minikube đủ chạy
+antiAffinity: "soft"
+
+# PVC
+volumeClaimTemplate:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: "standard"
+  resources:
+    requests:
+      storage: 5Gi

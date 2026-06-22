@@ -1,0 +1,58 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ecom
+  labels:
+    app.kubernetes.io/part-of: ecom-stack
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+  - host: {{ .Values.ingress.host | default "ecom.local" }}
+    http:
+      paths:
+      # /Auth/* -> api-gateway (gateway sẽ proxy sang auth-api)
+      - path: /Auth
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}-api-gateway
+            port:
+              number: 80
+      # /Business/* -> api-gateway
+      - path: /Business
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}-api-gateway
+            port:
+              number: 80
+      # /Order/* -> api-gateway
+      - path: /Order
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}-api-gateway
+            port:
+              number: 80
+      # /kibana -> Kibana
+      - path: /kibana
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana
+            port:
+              number: 5601
+      # / -> frontend
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}-frontend
+            port:
+              number: 80
+{{- end }}

@@ -1,3 +1,4 @@
+using BE.Application.Contracts.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,6 +19,11 @@ namespace BE.Application.Contracts.Interfaces.Customer
         /// Lấy tất cả khách hàng
         /// </summary>
         Task<IEnumerable<CustomerDto>> GetAllAsync();
+
+        /// <summary>
+        /// Lấy danh sách phân trang
+        /// </summary>
+        Task<PagingResult<CustomerDto>> GetAllPagingAsync(PagingFilterDto filter);
 
         /// <summary>
         /// Tạo khách hàng mới

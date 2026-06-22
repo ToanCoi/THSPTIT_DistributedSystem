@@ -1,3 +1,4 @@
+using BE.Application.Contracts.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,6 +19,11 @@ namespace BE.Application.Contracts.Interfaces.Inward
         /// Lấy tất cả phiếu nhập
         /// </summary>
         Task<IEnumerable<InwardDto>> GetAllAsync();
+
+        /// <summary>
+        /// Lấy danh sách phân trang
+        /// </summary>
+        Task<PagingResult<InwardDto>> GetAllPagingAsync(PagingFilterDto filter);
 
         /// <summary>
         /// Tạo phiếu nhập mới
@@ -49,6 +55,7 @@ namespace BE.Application.Contracts.Interfaces.Inward
         public Guid stock_id { get; set; }
         public decimal quantity { get; set; }
         public decimal unit_price { get; set; }
+        public decimal selling_price { get; set; }
         public string supplier { get; set; }
         public DateTime invoice_date { get; set; }
     }

@@ -1,0 +1,62 @@
+# Values override cho chart elastic/filebeat
+# Đọc container stdout/stderr từ /var/log/containers/*.log (K8s-native).
+# Đẩy log tới Logstash qua Beats input (port 5044).
+
+daemonset:
+  enabled: true
+
+filebeatConfig:
+  filebeat.yml: |
+    filebeat.autodiscover:
+      providers:
+        - type: kubernetes
+          hints.enabled: true
+          templates:
+            - condition:
+                contains:
+                  kubernetes.namespace: "ecom"
+              config:
+                - type: container
+                  paths:
+                    - /var/log/containers/*${data.kubernetes.container.id}.log
+                  json.keys_under_root: true
+                  json.add_error_key: true
+    processors:
+      - add_kubernetes_metadata:
+          host: ${NODE_NAME}
+          matchers:
+            - logs_path:
+                logs_path: /var/log/containers/
+      - drop_event:
+          when:
+            not:
+              has_fields: ['kubernetes']
+    output.logstash:
+      hosts: ["logstash-logstash:5044"]
+
+# Cho phép Filebeat truy cập /var/log/containers và /var/log/pods
+extraVolumes:
+  - name: varlogcontainers
+    hostPath:
+      path: /var/log/containers
+      type: ""
+  - name: varlogpods
+    hostPath:
+      path: /var/log/pods
+      type: ""
+
+extraVolumeMounts:
+  - name: varlogcontainers
+    mountPath: /var/log/containers
+    readOnly: true
+  - name: varlogpods
+    mountPath: /var/log/pods
+    readOnly: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi

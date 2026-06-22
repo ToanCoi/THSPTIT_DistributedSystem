@@ -24,5 +24,10 @@ namespace BE.Domain.DI.Outward
         /// Thêm phiếu xuất mới
         /// </summary>
         Task<bool> InsertAsync(OutwardEntity outward);
+
+        /// <summary>
+        /// Lấy giá xuất gần nhất của sản phẩm (giá bán)
+        /// </summary>
+        Task<decimal?> GetLatestOutwardPriceAsync(Guid productId);
     }
 }

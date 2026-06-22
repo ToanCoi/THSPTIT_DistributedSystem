@@ -1,0 +1,64 @@
+replicaCount: 2
+
+image:
+  repository: ecom/api-gateway
+  tag: ""            # sẽ được override bởi global.imageTag
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+containerPort: 80
+containerName: api-gateway
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+env:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:80"
+  Services__AuthApi: "http://ecom-stack-auth-api.ecom.svc.cluster.local:80"
+  Services__BusinessApi: "http://ecom-stack-business-api.ecom.svc.cluster.local:80"
+  Services__OrderApi: "http://ecom-stack-order-api.ecom.svc.cluster.local:80"
+
+envFromSecret:
+  Jwt__SecretKey: "jwt-secret-key"
+  Jwt__Issuer: "jwt-issuer"
+  Jwt__Audience: "jwt-audience"
+
+probes:
+  liveness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readiness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+serviceAccount:
+  create: true
+  name: ""

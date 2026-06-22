@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "voucher-worker.fullname" . }}
+  labels:
+    {{- include "voucher-worker.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "voucher-worker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "voucher-worker.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "voucher-worker.fullname" . }}
+      containers:
+        - name: {{ .Values.containerName | default (include "voucher-worker.name" .) }}
+          image: {{ include "voucher-worker.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

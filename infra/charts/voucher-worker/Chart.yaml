@@ -1,0 +1,6 @@
+apiVersion: v2
+name: voucher-worker
+description: VoucherWorker - Kafka consumer for order-created and ledger-change topics
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

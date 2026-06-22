@@ -1,3 +1,4 @@
+using BE.Application.Contracts.Dtos;
 using BE.Application.Contracts.Interfaces.Inward;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,6 @@ namespace BusinessApi.Controllers
     {
         private readonly IInwardService _inwardService;
 
-        /// <summary>
-        /// Khởi tạo InwardsController
-        /// </summary>
-        /// <param name="inwardService">Service phiếu nhập</param>
         public InwardsController(IInwardService inwardService)
         {
             _inwardService = inwardService;
@@ -28,7 +25,6 @@ namespace BusinessApi.Controllers
         /// <summary>
         /// Lấy tất cả phiếu nhập
         /// </summary>
-        /// <returns>Danh sách phiếu nhập</returns>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -37,10 +33,18 @@ namespace BusinessApi.Controllers
         }
 
         /// <summary>
+        /// Lấy danh sách phân trang
+        /// </summary>
+        [HttpGet("paging")]
+        public async Task<IActionResult> GetAllPaging([FromQuery] PagingFilterDto filter)
+        {
+            var result = await _inwardService.GetAllPagingAsync(filter);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Lấy phiếu nhập theo ID
         /// </summary>
-        /// <param name="id">ID phiếu nhập</param>
-        /// <returns>Phiếu nhập</returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -51,8 +55,6 @@ namespace BusinessApi.Controllers
         /// <summary>
         /// Tạo phiếu nhập mới
         /// </summary>
-        /// <param name="dto">Thông tin phiếu nhập</param>
-        /// <returns>Phiếu nhập vừa tạo</returns>
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] InwardCreateDto dto)
         {

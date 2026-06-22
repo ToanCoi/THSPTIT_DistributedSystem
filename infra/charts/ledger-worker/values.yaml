@@ -1,0 +1,25 @@
+replicaCount: 1
+
+image:
+  repository: ecom/ledger-worker
+  tag: ""
+  pullPolicy: IfNotPresent
+
+containerName: ledger-worker
+
+resources:
+  requests:
+    cpu: 150m
+    memory: 192Mi
+  limits:
+    cpu: 500m
+    memory: 384Mi
+
+env:
+  ConnectionStrings__BusinessConnection: "Server=ecom-stack-mysqlbusiness.ecom.svc.cluster.local;Port=3306;Database=business_db;User=root;Password=P@ssw0rd123;"
+  Kafka__BootstrapServers: "kafka.ecom.svc.cluster.local:9092"
+  Kafka__LedgerTopic: "ledger-change"
+  Kafka__LedgerGroupId: "ledger-worker-group"
+
+serviceAccount:
+  create: true

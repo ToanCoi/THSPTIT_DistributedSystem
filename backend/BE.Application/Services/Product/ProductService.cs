@@ -1,10 +1,13 @@
+using BE.Application.Contracts.Dtos;
 using BE.Application.Contracts.Interfaces.Product;
 using BE.Application.Exceptions;
 using BE.Domain.DI.Product;
 using BE.Domain.Entities;
+using BE.Domain.Repos;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BE.Application.Services.Product
@@ -15,11 +18,13 @@ namespace BE.Application.Services.Product
     public class ProductService : IProductService
     {
         private readonly IProductRepo _productRepo;
+        private readonly IBaseRepo _baseRepo;
         private readonly ILogger<ProductService> _logger;
 
-        public ProductService(IProductRepo productRepo, ILogger<ProductService> logger)
+        public ProductService(IProductRepo productRepo, IBaseRepo baseRepo, ILogger<ProductService> logger)
         {
             _productRepo = productRepo;
+            _baseRepo = baseRepo;
             _logger = logger;
         }
 
@@ -44,6 +49,36 @@ namespace BE.Application.Services.Product
                 result.Add(MapToDto(product));
             }
             return result;
+        }
+
+        /// <inheritdoc />
+        public async Task<PagingResult<ProductDto>> GetAllPagingAsync(PagingFilterDto filter)
+        {
+            var columns = "product_id, product_code, product_name, price, unit, created_date";
+            var sort = $"{filter.sort_field} {filter.sort_order}";
+
+            var pagingResult = await _baseRepo.GetPaging<ProductEntity>(
+                columns,
+                filter.skip,
+                filter.take,
+                sort,
+                null
+            );
+
+            var dtos = new List<ProductDto>();
+            if (pagingResult.Data != null)
+            {
+                foreach (var entity in pagingResult.Data.Cast<ProductEntity>())
+                {
+                    dtos.Add(MapToDto(entity));
+                }
+            }
+
+            return new PagingResult<ProductDto>
+            {
+                data = dtos,
+                total = dtos.Count
+            };
         }
 
         /// <inheritdoc />

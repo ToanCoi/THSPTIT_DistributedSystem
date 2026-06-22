@@ -1,0 +1,262 @@
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e8]: Hệ thống Phân tán - Microservice
+        - button [ref=e9] [cursor=pointer]:
+          - generic [ref=e11]: 󰍃
+    - navigation [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e16]: 󰀄
+          - generic:
+            - generic: Menu
+        - separator [ref=e17]
+        - list [ref=e18]:
+          - link "Khách hàng" [ref=e19] [cursor=pointer]:
+            - /url: /customers
+            - generic [ref=e21]: 󰡉
+            - generic:
+              - generic: Khách hàng
+          - link "Sản phẩm" [ref=e22] [cursor=pointer]:
+            - /url: /products
+            - generic [ref=e24]: 󰏖
+            - generic:
+              - generic: Sản phẩm
+          - link "Kho hàng" [ref=e25] [cursor=pointer]:
+            - /url: /stocks
+            - generic [ref=e27]: 󰾁
+            - generic:
+              - generic: Kho hàng
+          - link "Nhập kho" [ref=e28] [cursor=pointer]:
+            - /url: /inwards
+            - generic [ref=e30]: 󰜮
+            - generic:
+              - generic: Nhập kho
+          - link "Xuất kho" [ref=e31] [cursor=pointer]:
+            - /url: /outwards
+            - generic [ref=e33]: 󰜷
+            - generic:
+              - generic: Xuất kho
+          - link "Đơn hàng" [ref=e34] [cursor=pointer]:
+            - /url: /orders
+            - generic [ref=e36]: 󰄐
+            - generic:
+              - generic: Đơn hàng
+    - main [ref=e37]:
+      - generic [ref=e39]:
+        - heading "Quản lý Đơn hàng" [level=2] [ref=e42]
+        - generic [ref=e43]:
+          - generic [ref=e45]:
+            - generic [ref=e49]:
+              - generic [ref=e51]: 󰍉
+              - generic [ref=e52]:
+                - generic: Tìm kiếm
+                - textbox "Tìm kiếm" [ref=e53]
+            - button "Tạo đơn hàng" [ref=e55] [cursor=pointer]:
+              - generic [ref=e56]:
+                - generic [ref=e57]: 󰐕
+                - text: Tạo đơn hàng
+          - generic [ref=e58]:
+            - table [ref=e60]:
+              - rowgroup [ref=e61]:
+                - row "Mã đơn Khách hàng Ngày đặt Tổng tiền Trạng thái" [ref=e62]:
+                  - columnheader "Mã đơn" [ref=e63]:
+                    - generic [ref=e64]:
+                      - generic [ref=e65]: Mã đơn
+                      - generic [ref=e66]: 󰁝
+                  - columnheader "Khách hàng" [ref=e67]:
+                    - generic [ref=e68]:
+                      - generic [ref=e69]: Khách hàng
+                      - generic [ref=e70]: 󰁝
+                  - columnheader "Ngày đặt" [ref=e71]:
+                    - generic [ref=e72]:
+                      - generic [ref=e73]: Ngày đặt
+                      - generic [ref=e74]: 󰁝
+                  - columnheader "Tổng tiền" [ref=e75]:
+                    - generic [ref=e76]:
+                      - generic [ref=e77]: Tổng tiền
+                      - generic [ref=e78]: 󰁝
+                  - columnheader "Trạng thái" [ref=e79]:
+                    - generic [ref=e80]:
+                      - generic [ref=e81]: Trạng thái
+                      - generic [ref=e82]: 󰁝
+              - rowgroup [ref=e87]:
+                - row "ORD202606050406442094 0001-01-01T00:00:00 70.000 ₫ PENDING" [ref=e114] [cursor=pointer]:
+                  - cell "ORD202606050406442094" [ref=e115]
+                  - cell [ref=e116]
+                  - cell "0001-01-01T00:00:00" [ref=e117]
+                  - cell "70.000 ₫" [ref=e118]
+                  - cell "PENDING" [ref=e119]:
+                    - generic [ref=e121]: PENDING
+                - row "ORD20260604165523D950 0001-01-01T00:00:00 70.000 ₫ PENDING" [ref=e122] [cursor=pointer]:
+                  - cell "ORD20260604165523D950" [ref=e123]
+                  - cell [ref=e124]
+                  - cell "0001-01-01T00:00:00" [ref=e125]
+                  - cell "70.000 ₫" [ref=e126]
+                  - cell "PENDING" [ref=e127]:
+                    - generic [ref=e129]: PENDING
+                - row "ORD202606041548400535 0001-01-01T00:00:00 70.000 ₫ PENDING" [ref=e130] [cursor=pointer]:
+                  - cell "ORD202606041548400535" [ref=e131]
+                  - cell [ref=e132]
+                  - cell "0001-01-01T00:00:00" [ref=e133]
+                  - cell "70.000 ₫" [ref=e134]
+                  - cell "PENDING" [ref=e135]:
+                    - generic [ref=e137]: PENDING
+                - row "ORD20260604154403392E 0001-01-01T00:00:00 120.000 ₫ PENDING" [ref=e138] [cursor=pointer]:
+                  - cell "ORD20260604154403392E" [ref=e139]
+                  - cell [ref=e140]
+                  - cell "0001-01-01T00:00:00" [ref=e141]
+                  - cell "120.000 ₫" [ref=e142]
+                  - cell "PENDING" [ref=e143]:
+                    - generic [ref=e145]: PENDING
+                - row "ORD20260604152534912A 0001-01-01T00:00:00 160.000 ₫ PENDING" [ref=e146] [cursor=pointer]:
+                  - cell "ORD20260604152534912A" [ref=e147]
+                  - cell [ref=e148]
+                  - cell "0001-01-01T00:00:00" [ref=e149]
+                  - cell "160.000 ₫" [ref=e150]
+                  - cell "PENDING" [ref=e151]:
+                    - generic [ref=e153]: PENDING
+                - row "ORD20260604090441984B 0001-01-01T00:00:00 3.000 ₫ PENDING" [ref=e154] [cursor=pointer]:
+                  - cell "ORD20260604090441984B" [ref=e155]
+                  - cell [ref=e156]
+                  - cell "0001-01-01T00:00:00" [ref=e157]
+                  - cell "3.000 ₫" [ref=e158]
+                  - cell "PENDING" [ref=e159]:
+                    - generic [ref=e161]: PENDING
+                - row "ORD20260604090116FA4D 0001-01-01T00:00:00 3.000 ₫ PENDING" [ref=e162] [cursor=pointer]:
+                  - cell "ORD20260604090116FA4D" [ref=e163]
+                  - cell [ref=e164]
+                  - cell "0001-01-01T00:00:00" [ref=e165]
+                  - cell "3.000 ₫" [ref=e166]
+                  - cell "PENDING" [ref=e167]:
+                    - generic [ref=e169]: PENDING
+                - row "ORD202606040855167910 0001-01-01T00:00:00 20.000 ₫ PENDING" [ref=e170] [cursor=pointer]:
+                  - cell "ORD202606040855167910" [ref=e171]
+                  - cell [ref=e172]
+                  - cell "0001-01-01T00:00:00" [ref=e173]
+                  - cell "20.000 ₫" [ref=e174]
+                  - cell "PENDING" [ref=e175]:
+                    - generic [ref=e177]: PENDING
+                - row "ORD20260604085338BAEC 0001-01-01T00:00:00 2.000 ₫ PENDING" [ref=e178] [cursor=pointer]:
+                  - cell "ORD20260604085338BAEC" [ref=e179]
+                  - cell [ref=e180]
+                  - cell "0001-01-01T00:00:00" [ref=e181]
+                  - cell "2.000 ₫" [ref=e182]
+                  - cell "PENDING" [ref=e183]:
+                    - generic [ref=e185]: PENDING
+                - row "ORD20260604083255DDBC 0001-01-01T00:00:00 2.000 ₫ PENDING" [ref=e186] [cursor=pointer]:
+                  - cell "ORD20260604083255DDBC" [ref=e187]
+                  - cell [ref=e188]
+                  - cell "0001-01-01T00:00:00" [ref=e189]
+                  - cell "2.000 ₫" [ref=e190]
+                  - cell "PENDING" [ref=e191]:
+                    - generic [ref=e193]: PENDING
+            - separator [ref=e90]
+            - generic [ref=e91]:
+              - generic [ref=e92]:
+                - generic [ref=e93]: "Items per page:"
+                - combobox [ref=e96] [cursor=pointer]:
+                  - generic [ref=e98]:
+                    - generic [ref=e100]: "10"
+                    - combobox "Items per page:": "10"
+                  - generic [ref=e102]: 󰍝
+              - generic [ref=e104]: 1-10 of 18
+              - navigation "Pagination Navigation" [ref=e106]:
+                - list [ref=e107]:
+                  - listitem [ref=e108]:
+                    - button "First page" [disabled]:
+                      - generic:
+                        - generic: 󰘀
+                  - listitem [ref=e109]:
+                    - button "Previous page" [disabled]:
+                      - generic:
+                        - generic: 󰅁
+                  - listitem [ref=e110]:
+                    - button "Next page" [ref=e194] [cursor=pointer]:
+                      - generic [ref=e196]: 󰅂
+                  - listitem [ref=e111]:
+                    - button "Last page" [ref=e197] [cursor=pointer]:
+                      - generic [ref=e199]: 󰘁
+    - contentinfo [ref=e112]:
+      - generic [ref=e113]: © 2024 Hệ thống Phân tán - Microservice
+  - generic:
+    - dialog: 󰍝 󰍝 󰍝 󰐕
+    - dialog:
+      - generic [ref=e202]:
+        - generic [ref=e203]: Sửa đơn hàng
+        - generic [ref=e205]:
+          - generic [ref=e234]:
+            - combobox [ref=e236] [cursor=pointer]:
+              - generic [ref=e238]:
+                - generic [ref=e240]: c Hảo
+                - combobox "Khách hàng": c Hảo
+              - generic [ref=e242]: 󰍝
+              - generic:
+                - generic:
+                  - generic: Khách hàng
+            - alert [ref=e243]
+          - generic [ref=e206]:
+            - combobox [expanded] [ref=e208] [cursor=pointer]:
+              - generic [ref=e210]:
+                - generic [ref=e212]: Kho H├áng Ch├¡nh
+                - combobox "Kho" [expanded]: Kho H├áng Ch├¡nh
+              - generic [ref=e214]: 󰍝
+              - generic:
+                - generic:
+                  - generic: Kho
+              - listbox "Kho" [ref=e295]:
+                - option "Kho H├áng Ch├¡nh" [active] [selected] [ref=e296]:
+                  - generic [ref=e298]: Kho H├áng Ch├¡nh
+            - alert [ref=e215]
+          - separator [ref=e217]
+          - heading "Chi tiết đơn hàng" [level=4] [ref=e218]
+          - list [ref=e219]:
+            - listitem [ref=e220]:
+              - generic [ref=e222]: "1."
+              - generic [ref=e224]: sản phẩm 3
+              - generic [ref=e246]:
+                - generic [ref=e249]:
+                  - spinbutton "SL" [ref=e251]: "1"
+                  - generic:
+                    - generic:
+                      - generic: SL
+                - generic [ref=e254]:
+                  - spinbutton "Giá" [ref=e256]: "70000"
+                  - generic:
+                    - generic:
+                      - generic: Giá
+                - button [ref=e257] [cursor=pointer]:
+                  - generic [ref=e259]: 󰆴
+          - generic [ref=e260]:
+            - generic [ref=e262]:
+              - combobox [ref=e264] [cursor=pointer]:
+                - generic [ref=e265]:
+                  - generic: Sản phẩm
+                  - generic [ref=e266]:
+                    - combobox "Sản phẩm"
+                - generic [ref=e268]: 󰍝
+              - alert [ref=e269]
+            - generic [ref=e272]:
+              - generic [ref=e274]:
+                - spinbutton "Số lượng" [ref=e276]: "1"
+                - generic:
+                  - generic:
+                    - generic: Số lượng
+              - alert [ref=e277]
+            - generic [ref=e280]:
+              - generic [ref=e282]:
+                - spinbutton "Đơn giá" [ref=e284]: "0"
+                - generic:
+                  - generic:
+                    - generic: Đơn giá
+              - alert [ref=e285]
+            - button [ref=e288] [cursor=pointer]:
+              - generic [ref=e290]: 󰐕
+          - separator [ref=e226]
+          - strong [ref=e228]: "Tổng tiền: 70.000 ₫"
+        - generic [ref=e229]:
+          - button "Hủy" [ref=e230] [cursor=pointer]:
+            - generic [ref=e231]: Hủy
+          - button "Lưu" [ref=e291] [cursor=pointer]:
+            - generic [ref=e292]: Lưu

@@ -1,0 +1,39 @@
+# Values override cho chart elastic/kibana
+
+replicas: 1
+
+# Tắt pre-install hook vì ES đã disable xpack.security
+# → hook tạo auth token sẽ fail với 401
+hooks:
+  preInstall: false
+  postInstall: false
+
+kibanaConfig:
+  kibana.yml: |
+    server.name: kibana
+    server.host: "0.0.0.0"
+    elasticsearch.hosts: ["https://elasticsearch-master:9200"]
+    elasticsearch.username: "elastic"
+    elasticsearch.password: "${KIBANA_PASSWORD}"
+    elasticsearch.ssl.verificationMode: "none"
+    monitoring.ui.container.elasticsearch.enabled: true
+
+extraEnvs:
+  - name: KIBANA_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-credentials
+        key: password
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+# Service type: ClusterIP (sẽ được Ingress bên ngoài route tới)
+service:
+  type: ClusterIP
+  port: 5601

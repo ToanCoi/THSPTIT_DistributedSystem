@@ -68,7 +68,8 @@
               required
             ></v-select>
             <v-text-field v-model="formData.quantity" label="Số lượng" variant="outlined" type="number" required></v-text-field>
-            <v-text-field v-model="formData.unit_price" label="Đơn giá" variant="outlined" type="number" required></v-text-field>
+            <v-text-field v-model="formData.unit_price" label="Giá nhập" variant="outlined" type="number" required></v-text-field>
+            <v-text-field v-model="formData.selling_price" label="Giá bán" variant="outlined" type="number" required></v-text-field>
             <v-text-field v-model="formData.supplier" label="Nhà cung cấp" variant="outlined"></v-text-field>
             <v-text-field v-model="formData.invoice_date" label="Ngày hóa đơn" variant="outlined" type="date"></v-text-field>
           </v-form>
@@ -116,6 +117,7 @@ const formData = ref({
   stock_id: '',
   quantity: 0,
   unit_price: 0,
+  selling_price: 0,
   supplier: '',
   invoice_date: ''
 })
@@ -140,6 +142,7 @@ const openDialog = () => {
     stock_id: '',
     quantity: 0,
     unit_price: 0,
+    selling_price: 0,
     supplier: '',
     invoice_date: new Date().toISOString().split('T')[0]
   }

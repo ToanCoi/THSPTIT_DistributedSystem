@@ -52,7 +52,6 @@ namespace BE.Application.Services
             var filters = BuildFilterExpression(filter);
 
             var result = await _employeeRepo.GetPaging<EmployeeEntity>(
-                typeof(EmployeeEntity),
                 columns,
                 filter.skip,
                 filter.take,

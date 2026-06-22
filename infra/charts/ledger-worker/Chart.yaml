@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ledger-worker
+description: LedgerWorker - Kafka consumer for ledger-change topic
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

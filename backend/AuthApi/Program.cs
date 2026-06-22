@@ -22,7 +22,13 @@ var fileTarget = new FileTarget("logfile")
     FileName = Path.Combine(logDirectory, "${shortdate}.log"),
     Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}"
 };
+var consoleTarget = new ConsoleTarget("logconsole")
+{
+    Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}",
+    StdErr = true
+};
 config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, consoleTarget);
 LogManager.Configuration = config;
 
 var logger = NLog.LogManager.GetCurrentClassLogger();

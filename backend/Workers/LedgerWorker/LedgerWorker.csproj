@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Confluent.Kafka" Version="2.6.1" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="NLog" Version="5.3.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Workers.Shared\Workers.Shared.csproj" />
+    <ProjectReference Include="..\..\BE.Application\BE.Application.csproj" />
+    <ProjectReference Include="..\..\BE.Domain\BE.Domain.csproj" />
+    <ProjectReference Include="..\..\BE.Domain.Mysql\BE.Domain.Mysql.csproj" />
+    <ProjectReference Include="..\..\BE.Application.Contracts\BE.Application.Contracts.csproj" />
+    <ProjectReference Include="..\..\BE.HostBase\BE.HostBase.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,3 +1,4 @@
+using BE.Application.Contracts.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -20,6 +21,11 @@ namespace BE.Application.Contracts.Interfaces.Order
         Task<IEnumerable<OrderDto>> GetAllAsync();
 
         /// <summary>
+        /// Lấy danh sách phân trang
+        /// </summary>
+        Task<PagingResult<OrderDto>> GetAllPagingAsync(PagingFilterDto filter);
+
+        /// <summary>
         /// Tạo đơn hàng mới (publish Kafka message)
         /// </summary>
         Task<OrderDto> CreateAsync(OrderCreateDto dto);
@@ -28,6 +34,11 @@ namespace BE.Application.Contracts.Interfaces.Order
         /// Cập nhật trạng thái đơn hàng
         /// </summary>
         Task<OrderDto> UpdateStatusAsync(Guid orderId, string status);
+
+        /// <summary>
+        /// Cập nhật đơn hàng đầy đủ
+        /// </summary>
+        Task<OrderDto> UpdateAsync(Guid orderId, OrderCreateDto dto);
     }
 
     /// <summary>
@@ -62,6 +73,7 @@ namespace BE.Application.Contracts.Interfaces.Order
     public class OrderCreateDto
     {
         public Guid customer_id { get; set; }
+        public Guid stock_id { get; set; }
         public DateTime order_date { get; set; }
         public List<OrderItemCreateDto> items { get; set; } = new List<OrderItemCreateDto>();
     }

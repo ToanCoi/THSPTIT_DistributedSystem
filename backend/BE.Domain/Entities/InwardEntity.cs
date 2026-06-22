@@ -28,9 +28,14 @@ namespace BE.Domain.Entities
         public decimal quantity { get; set; }
 
         /// <summary>
-        /// Đơn giá
+        /// Đơn giá nhập
         /// </summary>
         public decimal unit_price { get; set; }
+
+        /// <summary>
+        /// Giá bán
+        /// </summary>
+        public decimal selling_price { get; set; }
 
         /// <summary>
         /// Nhà cung cấp

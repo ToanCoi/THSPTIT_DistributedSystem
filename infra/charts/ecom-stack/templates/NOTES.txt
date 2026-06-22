@@ -1,0 +1,33 @@
+==================================================
+Ecom stack deployed successfully!
+==================================================
+
+Namespace: {{ .Release.Namespace }}
+
+To access the services:
+
+1. Get the Ingress host (use NodePort when running on minikube):
+   {{- if .Values.ingress.enabled }}
+   minikube -p ecom addons enable ingress
+   minikube -p ecom tunnel  # in another terminal
+   {{- end }}
+
+2. Add ecom.local to /etc/hosts (Windows: C:\Windows\System32\drivers\etc\hosts):
+   $(minikube -p ecom ip) ecom.local
+
+3. URLs:
+   - Frontend:    http://ecom.local/
+   - API:         http://ecom.local/Auth, /Business, /Order
+   - Kibana:      http://ecom.local/kibana
+
+4. View logs in Kibana:
+   - Stack Management -> Index Patterns -> Create:
+     Pattern: ecom-logs-*
+     Time field: @timestamp
+   - Discover tab
+
+5. To seed MySQL with initial schema:
+   ./infra/scripts/seed-mysql.sh
+
+6. Teardown:
+   ./infra/scripts/teardown.sh

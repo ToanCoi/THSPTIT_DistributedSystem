@@ -212,24 +212,22 @@ namespace BE.Domain.Repos
         /// <summary>
         /// Lấy dữ liệu phân trang từ cơ sở dữ liệu.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="type"></param>
-        /// <param name="columns"></param>
-        /// <param name="skip"></param>
-        /// <param name="take"></param>
-        /// <param name="sort"></param>
-        /// <param name="filters"></param>
-        /// <returns></returns>
-        Task<PagingResult> GetPaging<T>(Type type, string columns, int skip, int take, string sort, string filters = null);
+        /// <typeparam name="T">Kiểu entity</typeparam>
+        /// <param name="columns">Các cột cần lấy</param>
+        /// <param name="skip">Số bản ghi bỏ qua</param>
+        /// <param name="take">Số bản ghi cần lấy</param>
+        /// <param name="sort">Câu lệnh sắp xếp</param>
+        /// <param name="filters">Câu lệnh lọc</param>
+        /// <returns>Kết quả phân trang</returns>
+        Task<PagingResult> GetPaging<T>(string columns, int skip, int take, string sort, string filters = null);
 
         /// <summary>
         /// Lấy dữ liệu phân trang từ cơ sở dữ liệu và trả về tổng số bản ghi.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="type"></param>
-        /// <param name="columns"></param>
-        /// <param name="filters"></param>
-        /// <returns></returns>
-        Task<PagingSummaryResult> GetPagingSummary<T>(Type type, string columns, string filters = null);
+        /// <typeparam name="T">Kiểu entity</typeparam>
+        /// <param name="columns">Các cột cần lấy</param>
+        /// <param name="filters">Câu lệnh lọc</param>
+        /// <returns>Kết quả tổng hợp phân trang</returns>
+        Task<PagingSummaryResult> GetPagingSummary<T>(string columns, string filters = null);
     }
 }

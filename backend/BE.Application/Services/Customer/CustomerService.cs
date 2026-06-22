@@ -1,12 +1,13 @@
+using BE.Application.Contracts.Dtos;
 using BE.Application.Contracts.Interfaces.Customer;
-using BE.Application.Contracts.Interfaces.Product;
 using BE.Application.Exceptions;
 using BE.Domain.DI.Customer;
-using BE.Domain.DI.Product;
 using BE.Domain.Entities;
+using BE.Domain.Repos;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BE.Application.Services.Customer
@@ -17,11 +18,13 @@ namespace BE.Application.Services.Customer
     public class CustomerService : ICustomerService
     {
         private readonly ICustomerRepo _customerRepo;
+        private readonly IBaseRepo _baseRepo;
         private readonly ILogger<CustomerService> _logger;
 
-        public CustomerService(ICustomerRepo customerRepo, ILogger<CustomerService> logger)
+        public CustomerService(ICustomerRepo customerRepo, IBaseRepo baseRepo, ILogger<CustomerService> logger)
         {
             _customerRepo = customerRepo;
+            _baseRepo = baseRepo;
             _logger = logger;
         }
 
@@ -46,6 +49,36 @@ namespace BE.Application.Services.Customer
                 result.Add(MapToDto(customer));
             }
             return result;
+        }
+
+        /// <inheritdoc />
+        public async Task<PagingResult<CustomerDto>> GetAllPagingAsync(PagingFilterDto filter)
+        {
+            var columns = "customer_id, user_id, full_name, phone, email, address, created_date";
+            var sort = $"{filter.sort_field} {filter.sort_order}";
+
+            var pagingResult = await _baseRepo.GetPaging<CustomerEntity>(
+                columns,
+                filter.skip,
+                filter.take,
+                sort,
+                null
+            );
+
+            var dtos = new List<CustomerDto>();
+            if (pagingResult.Data != null)
+            {
+                foreach (var entity in pagingResult.Data.Cast<CustomerEntity>())
+                {
+                    dtos.Add(MapToDto(entity));
+                }
+            }
+
+            return new PagingResult<CustomerDto>
+            {
+                data = dtos,
+                total = dtos.Count
+            };
         }
 
         /// <inheritdoc />

@@ -182,5 +182,17 @@ namespace BE.Domain.Mysql
 
             return rows > 0;
         }
+
+        /// <inheritdoc />
+        public async Task<bool> DeleteByOrderIdAsync(Guid orderId)
+        {
+            const string sql = @"
+                DELETE FROM order_items
+                WHERE order_id = @orderId";
+
+            using var connection = new MySqlConnection(_connectionString);
+            var rows = await connection.ExecuteAsync(sql, new { orderId = orderId.ToString() });
+            return rows > 0;
+        }
     }
 }

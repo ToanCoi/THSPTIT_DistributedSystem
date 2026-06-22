@@ -1,3 +1,4 @@
+using BE.Application.Contracts.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,6 +19,11 @@ namespace BE.Application.Contracts.Interfaces.Product
         /// Lấy tất cả sản phẩm
         /// </summary>
         Task<IEnumerable<ProductDto>> GetAllAsync();
+
+        /// <summary>
+        /// Lấy danh sách phân trang
+        /// </summary>
+        Task<PagingResult<ProductDto>> GetAllPagingAsync(PagingFilterDto filter);
 
         /// <summary>
         /// Tạo sản phẩm mới

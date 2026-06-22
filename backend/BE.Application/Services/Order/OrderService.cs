@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BE.Application.Contracts.Dtos;
 using BE.Application.Contracts.Interfaces.Order;
 using BE.Application.Exceptions;
 using Confluent.Kafka;
 using BE.Domain.DI.Order;
 using BE.Domain.Entities;
+using BE.Domain.Repos;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace BE.Application.Services.Order
@@ -18,27 +21,36 @@ namespace BE.Application.Services.Order
     {
         private readonly IOrderRepo _orderRepo;
         private readonly IOrderItemRepo _orderItemRepo;
+        private readonly IBaseRepo _baseRepo;
         private readonly ILogger<OrderService> _logger;
         private readonly IProducer<string, string> _kafkaProducer;
         private readonly string _kafkaTopic;
 
+        private readonly IConfiguration _configuration;
+
         public OrderService(
             IOrderRepo orderRepo,
             IOrderItemRepo orderItemRepo,
-            ILogger<OrderService> logger)
+            IBaseRepo baseRepo,
+            ILogger<OrderService> logger,
+            IConfiguration configuration)
         {
             _orderRepo = orderRepo;
             _orderItemRepo = orderItemRepo;
+            _baseRepo = baseRepo;
             _logger = logger;
+            _configuration = configuration;
 
-            // Cấu hình Kafka producer
-            var config = new ProducerConfig
+            // Cấu hình Kafka producer từ config
+            var producerConfig = new ProducerConfig
             {
-                BootstrapServers = "localhost:9092",
-                Acks = Acks.All
+                BootstrapServers = _configuration["Kafka:BootstrapServers"] ?? "localhost:9093",
+                Acks = Acks.All,
+                SocketTimeoutMs = 5000,
+                MessageTimeoutMs = 5000
             };
-            _kafkaProducer = new ProducerBuilder<string, string>(config).Build();
-            _kafkaTopic = "order-created";
+            _kafkaProducer = new ProducerBuilder<string, string>(producerConfig).Build();
+            _kafkaTopic = _configuration["Kafka:Topic"] ?? "order-created";
         }
 
         /// <inheritdoc />
@@ -65,6 +77,37 @@ namespace BE.Application.Services.Order
                 result.Add(MapToDto(order, items));
             }
             return result;
+        }
+
+        /// <inheritdoc />
+        public async Task<PagingResult<OrderDto>> GetAllPagingAsync(PagingFilterDto filter)
+        {
+            var columns = "order_id, customer_id, order_code, total_amount, status, order_date, created_date";
+            var sort = $"{filter.sort_field} {filter.sort_order}";
+
+            var pagingResult = await _baseRepo.GetPaging<OrderEntity>(
+                columns,
+                filter.skip,
+                filter.take,
+                sort,
+                null
+            );
+
+            var dtos = new List<OrderDto>();
+            if (pagingResult.Data != null)
+            {
+                foreach (var entity in pagingResult.Data.Cast<OrderEntity>())
+                {
+                    var items = await _orderItemRepo.GetByOrderIdAsync(entity.order_id);
+                    dtos.Add(MapToDto(entity, items));
+                }
+            }
+
+            return new PagingResult<OrderDto>
+            {
+                data = dtos,
+                total = dtos.Count
+            };
         }
 
         /// <inheritdoc />
@@ -111,7 +154,7 @@ namespace BE.Application.Services.Order
             await _orderItemRepo.InsertManyAsync(orderItems);
 
             // Publish Kafka message
-            await PublishOrderCreatedMessage(order, dto.items);
+            await PublishOrderCreatedMessage(order, dto.stock_id, dto.items);
 
             _logger.LogInformation("Tạo đơn hàng mới [{order_id}]", order.order_id);
 
@@ -136,15 +179,62 @@ namespace BE.Application.Services.Order
             return MapToDto(order, items);
         }
 
+        /// <inheritdoc />
+        public async Task<OrderDto> UpdateAsync(Guid orderId, OrderCreateDto dto)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId);
+            if (order == null)
+            {
+                throw new BusinessException("Không tìm thấy đơn hàng", 404);
+            }
+
+            // Cập nhật thông tin đơn hàng
+            order.customer_id = dto.customer_id;
+            order.order_date = dto.order_date;
+
+            // Tính lại tổng tiền
+            decimal totalAmount = 0;
+            var orderItems = new List<OrderItemEntity>();
+
+            foreach (var itemDto in dto.items)
+            {
+                var orderItem = new OrderItemEntity
+                {
+                    order_item_id = Guid.NewGuid(),
+                    order_id = order.order_id,
+                    product_id = itemDto.product_id,
+                    quantity = itemDto.quantity,
+                    unit_price = itemDto.unit_price,
+                    created_date = DateTime.UtcNow,
+                    created_by = "system"
+                };
+                orderItems.Add(orderItem);
+                totalAmount += itemDto.quantity * itemDto.unit_price;
+            }
+            order.total_amount = totalAmount;
+
+            // Xóa chi tiết cũ và thêm chi tiết mới
+            await _orderItemRepo.DeleteByOrderIdAsync(orderId);
+            await _orderItemRepo.InsertManyAsync(orderItems);
+
+            // Cập nhật đơn hàng
+            await _orderRepo.UpdateAsync(order);
+
+            _logger.LogInformation("Cập nhật đơn hàng [{order_id}]", orderId);
+
+            return MapToDto(order, orderItems);
+        }
+
         /// <summary>
         /// Publish message to Kafka topic
         /// </summary>
-        private async Task PublishOrderCreatedMessage(OrderEntity order, List<OrderItemCreateDto> items)
+        private async Task PublishOrderCreatedMessage(OrderEntity order, Guid stockId, List<OrderItemCreateDto> items)
         {
             var message = new
             {
                 order_id = order.order_id.ToString(),
                 customer_id = order.customer_id.ToString(),
+                stock_id = stockId.ToString(),
                 order_code = order.order_code,
                 items = items.Select(i => new
                 {

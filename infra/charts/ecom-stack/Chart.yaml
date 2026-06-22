@@ -1,0 +1,56 @@
+apiVersion: v2
+name: ecom-stack
+description: |
+  Umbrella chart cho toàn bộ Ecom stack: 4 API + 3 workers + frontend + MySQL (2 instance) + Kafka + Ingress.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: api-gateway
+    version: 0.1.0
+    repository: file://../api-gateway
+    condition: api-gateway.enabled
+  - name: auth-api
+    version: 0.1.0
+    repository: file://../auth-api
+    condition: auth-api.enabled
+  - name: business-api
+    version: 0.1.0
+    repository: file://../business-api
+    condition: business-api.enabled
+  - name: order-api
+    version: 0.1.0
+    repository: file://../order-api
+    condition: order-api.enabled
+  - name: handle-worker
+    version: 0.1.0
+    repository: file://../handle-worker
+    condition: handle-worker.enabled
+  - name: ledger-worker
+    version: 0.1.0
+    repository: file://../ledger-worker
+    condition: ledger-worker.enabled
+  - name: voucher-worker
+    version: 0.1.0
+    repository: file://../voucher-worker
+    condition: voucher-worker.enabled
+  - name: frontend
+    version: 0.1.0
+    repository: file://../frontend
+    condition: frontend.enabled
+
+  - name: mysql
+    version: 9.10.4
+    repository: https://charts.bitnami.com/bitnami
+    condition: mysql.enabled
+    alias: mysqlmaster
+  - name: mysql
+    version: 9.10.4
+    repository: https://charts.bitnami.com/bitnami
+    condition: mysql.enabled
+    alias: mysqlbusiness
+  - name: kafka
+    version: 22.1.5
+    repository: https://charts.bitnami.com/bitnami
+    condition: kafka.enabled

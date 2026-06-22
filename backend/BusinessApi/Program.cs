@@ -4,6 +4,7 @@ using BE.Application.Contracts.Interfaces.Product;
 using BE.Application.Contracts.Interfaces.Stock;
 using BE.Application.Contracts.Interfaces.Inward;
 using BE.Application.Contracts.Interfaces.Outward;
+using BE.Application.Contracts.Interfaces.Ledger;
 using BE.Application.Services;
 using BE.Application.Services.Customer;
 using BE.Application.Services.Product;
@@ -15,6 +16,7 @@ using BE.Domain.DI.Product;
 using BE.Domain.DI.Stock;
 using BE.Domain.DI.Inward;
 using BE.Domain.DI.Outward;
+using BE.Domain.DI.Ledger;
 using BE.Domain.Mysql;
 using BE.HostBase.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,6 +25,8 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using System.Text;
+using BE.Domain.Repos;
+using Workers.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +40,13 @@ var fileTarget = new FileTarget("logfile")
     FileName = Path.Combine(logDirectory, "${shortdate}.log"),
     Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}"
 };
+var consoleTarget = new ConsoleTarget("logconsole")
+{
+    Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}",
+    StdErr = true
+};
 config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, consoleTarget);
 LogManager.Configuration = config;
 
 var logger = NLog.LogManager.GetCurrentClassLogger();
@@ -71,11 +81,13 @@ var connectionString = builder.Configuration.GetConnectionString("BusinessConnec
     ?? "Server=localhost;Port=3306;Database=business_db;User=root;Password=Mysql!110720;";
 
 // Đăng ký repositories
+builder.Services.AddScoped<IBaseRepo>(sp => new DapperRepo(connectionString));
 builder.Services.AddScoped<ICustomerRepo>(sp => new CustomerRepo(connectionString));
 builder.Services.AddScoped<IProductRepo>(sp => new ProductRepo(connectionString));
 builder.Services.AddScoped<IStockRepo>(sp => new StockRepo(connectionString));
 builder.Services.AddScoped<IInwardRepo>(sp => new InwardRepo(connectionString));
 builder.Services.AddScoped<IOutwardRepo>(sp => new OutwardRepo(connectionString));
+builder.Services.AddScoped<ILedgerRepo>(sp => new LedgerRepo(connectionString));
 
 // Đăng ký services
 builder.Services.AddScoped<ICustomerService, CustomerService>();
@@ -83,6 +95,11 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IInwardService, InwardService>();
 builder.Services.AddScoped<IOutwardService, OutwardService>();
+
+// Đăng ký Kafka producer dùng chung
+var kafkaBootstrap = builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9093";
+builder.Services.AddSingleton<IKafkaProducerService>(sp =>
+    new KafkaProducerService(kafkaBootstrap, sp.GetRequiredService<ILogger<KafkaProducerService>>()));
 
 // Add controllers
 builder.Services.AddControllers();

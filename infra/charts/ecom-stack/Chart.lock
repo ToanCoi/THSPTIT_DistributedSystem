@@ -1,0 +1,36 @@
+dependencies:
+- name: api-gateway
+  repository: file://../api-gateway
+  version: 0.1.0
+- name: auth-api
+  repository: file://../auth-api
+  version: 0.1.0
+- name: business-api
+  repository: file://../business-api
+  version: 0.1.0
+- name: order-api
+  repository: file://../order-api
+  version: 0.1.0
+- name: handle-worker
+  repository: file://../handle-worker
+  version: 0.1.0
+- name: ledger-worker
+  repository: file://../ledger-worker
+  version: 0.1.0
+- name: voucher-worker
+  repository: file://../voucher-worker
+  version: 0.1.0
+- name: frontend
+  repository: file://../frontend
+  version: 0.1.0
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 9.10.4
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 9.10.4
+- name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: 22.1.5
+digest: sha256:5628485cb6c2d87a97b85fb6500afeab333889757047b629ae5a5b02d2f8c15f
+generated: "2026-06-21T16:28:45.8665139+07:00"

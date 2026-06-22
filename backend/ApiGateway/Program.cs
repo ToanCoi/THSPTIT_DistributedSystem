@@ -13,30 +13,44 @@ Directory.CreateDirectory(logDirectory);
 var fileTarget = new FileTarget("logfile")
 {
     FileName = Path.Combine(logDirectory, "${shortdate}.log"),
-    Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message}"
+    Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}"
+};
+var consoleTarget = new ConsoleTarget("logconsole")
+{
+    Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}",
+    StdErr = true
 };
 config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, consoleTarget);
 LogManager.Configuration = config;
 
 var logger = NLog.LogManager.GetCurrentClassLogger();
 logger.Info("ApiGateway starting...");
 
+// Đọc service URLs từ environment variables
+var authApiUrl = builder.Configuration["Services:AuthApi"] ?? "http://localhost:5289";
+var businessApiUrl = builder.Configuration["Services:BusinessApi"] ?? "http://localhost:5119";
+var orderApiUrl = builder.Configuration["Services:OrderApi"] ?? "http://localhost:5120";
+
+logger.Info("Service URLs - Auth: {AuthUrl}, Business: {BusinessUrl}, Order: {OrderUrl}",
+    authApiUrl, businessApiUrl, orderApiUrl);
+
 // Đăng ký HttpClient cho các service
 builder.Services.AddHttpClient("Auth", c =>
 {
-    c.BaseAddress = new Uri("http://localhost:5289");
+    c.BaseAddress = new Uri(authApiUrl);
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
 builder.Services.AddHttpClient("Business", c =>
 {
-    c.BaseAddress = new Uri("http://localhost:5119");
+    c.BaseAddress = new Uri(businessApiUrl);
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
 builder.Services.AddHttpClient("Order", c =>
 {
-    c.BaseAddress = new Uri("http://localhost:5120");
+    c.BaseAddress = new Uri(orderApiUrl);
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
@@ -82,14 +96,14 @@ app.Map("/Auth/{**path}", async context =>
 app.Map("/Business/{**path}", async context =>
 {
     var proxy = context.RequestServices.GetRequiredService<ProxyService>();
-    await proxy.ProxyAsync("Business", $"/api/{context.Request.RouteValues["path"]}", context);
+    await proxy.ProxyAsync("Business", $"/{context.Request.RouteValues["path"]}", context);
 });
 
 // Route: /Order/* -> OrderApi:5003
 app.Map("/Order/{**path}", async context =>
 {
     var proxy = context.RequestServices.GetRequiredService<ProxyService>();
-    await proxy.ProxyAsync("Order", $"/api/{context.Request.RouteValues["path"]}", context);
+    await proxy.ProxyAsync("Order", $"/{context.Request.RouteValues["path"]}", context);
 });
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "ApiGateway" }));

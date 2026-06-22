@@ -84,7 +84,7 @@ namespace BE.Domain.Mysql
                 VALUES
                     (@closing_id, @product_id, @stock_id, @quantity, @updated_date)
                 ON DUPLICATE KEY UPDATE
-                    quantity = @quantity,
+                    quantity = quantity + @quantity,
                     updated_date = @updated_date";
 
             using var connection = new MySqlConnection(_connectionString);
@@ -98,6 +98,21 @@ namespace BE.Domain.Mysql
             });
 
             return rows > 0;
+        }
+
+        /// <inheritdoc />
+        public async Task<decimal> GetClosingQuantityAsync(Guid productId, Guid stockId)
+        {
+            const string sql = @"
+                SELECT quantity FROM led_inventory_item_ledger_closing
+                WHERE product_id = @productId AND stock_id = @stockId";
+
+            using var connection = new MySqlConnection(_connectionString);
+            return await connection.QueryFirstOrDefaultAsync<decimal>(sql, new
+            {
+                productId = productId.ToString(),
+                stockId = stockId.ToString()
+            });
         }
     }
 }

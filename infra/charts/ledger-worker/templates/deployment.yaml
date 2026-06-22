@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ledger-worker.fullname" . }}
+  labels:
+    {{- include "ledger-worker.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ledger-worker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ledger-worker.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "ledger-worker.fullname" . }}
+      containers:
+        - name: {{ .Values.containerName | default (include "ledger-worker.name" .) }}
+          image: {{ include "ledger-worker.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

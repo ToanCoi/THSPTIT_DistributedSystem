@@ -1,0 +1,54 @@
+replicaCount: 2
+
+image:
+  repository: ecom/order-api
+  tag: ""
+  pullPolicy: IfNotPresent
+
+containerPort: 80
+containerName: order-api
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 700m
+    memory: 512Mi
+
+env:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:80"
+  ConnectionStrings__BusinessConnection: "Server=ecom-stack-mysqlbusiness.ecom.svc.cluster.local;Port=3306;Database=business_db;User=root;Password=P@ssw0rd123;"
+  Kafka__BootstrapServers: "kafka.ecom.svc.cluster.local:9092"
+  Kafka__Topic: "order-created"
+
+envFromSecret:
+  Jwt__SecretKey: "jwt-secret-key"
+  Jwt__Issuer: "jwt-issuer"
+  Jwt__Audience: "jwt-audience"
+
+probes:
+  liveness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readiness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+serviceAccount:
+  create: true

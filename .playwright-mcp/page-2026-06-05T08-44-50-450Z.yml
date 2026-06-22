@@ -1,0 +1,122 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e8]: Hệ thống Phân tán - Microservice
+        - button [ref=e9] [cursor=pointer]:
+          - generic [ref=e11]: 󰍃
+    - navigation [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e16]: 󰀄
+          - generic:
+            - generic: Menu
+        - separator [ref=e17]
+        - list [ref=e18]:
+          - link "Khách hàng" [ref=e19] [cursor=pointer]:
+            - /url: /customers
+            - generic [ref=e21]: 󰡉
+            - generic:
+              - generic: Khách hàng
+          - link "Sản phẩm" [ref=e22] [cursor=pointer]:
+            - /url: /products
+            - generic [ref=e24]: 󰏖
+            - generic:
+              - generic: Sản phẩm
+          - link "Kho hàng" [ref=e25] [cursor=pointer]:
+            - /url: /stocks
+            - generic [ref=e27]: 󰾁
+            - generic:
+              - generic: Kho hàng
+          - link "Nhập kho" [ref=e28] [cursor=pointer]:
+            - /url: /inwards
+            - generic [ref=e30]: 󰜮
+            - generic:
+              - generic: Nhập kho
+          - link "Xuất kho" [ref=e31] [cursor=pointer]:
+            - /url: /outwards
+            - generic [ref=e33]: 󰜷
+            - generic:
+              - generic: Xuất kho
+          - link "Đơn hàng" [ref=e34] [cursor=pointer]:
+            - /url: /orders
+            - generic [ref=e36]: 󰄐
+            - generic:
+              - generic: Đơn hàng
+    - main [ref=e37]:
+      - generic [ref=e39]:
+        - heading "Quản lý Đơn hàng" [level=2] [ref=e42]
+        - generic [ref=e43]:
+          - generic [ref=e45]:
+            - generic [ref=e49]:
+              - generic [ref=e51]: 󰍉
+              - generic [ref=e52]:
+                - generic: Tìm kiếm
+                - textbox "Tìm kiếm" [ref=e53]
+            - button "Tạo đơn hàng" [ref=e55] [cursor=pointer]:
+              - generic [ref=e56]:
+                - generic [ref=e57]: 󰐕
+                - text: Tạo đơn hàng
+          - generic [ref=e58]:
+            - table [ref=e60]:
+              - rowgroup [ref=e61]:
+                - row "Mã đơn Khách hàng Ngày đặt Tổng tiền Trạng thái" [ref=e62]:
+                  - columnheader "Mã đơn" [ref=e63]:
+                    - generic [ref=e64]:
+                      - generic [ref=e65]: Mã đơn
+                      - generic [ref=e66]: 󰁝
+                  - columnheader "Khách hàng" [ref=e67]:
+                    - generic [ref=e68]:
+                      - generic [ref=e69]: Khách hàng
+                      - generic [ref=e70]: 󰁝
+                  - columnheader "Ngày đặt" [ref=e71]:
+                    - generic [ref=e72]:
+                      - generic [ref=e73]: Ngày đặt
+                      - generic [ref=e74]: 󰁝
+                  - columnheader "Tổng tiền" [ref=e75]:
+                    - generic [ref=e76]:
+                      - generic [ref=e77]: Tổng tiền
+                      - generic [ref=e78]: 󰁝
+                  - columnheader "Trạng thái" [ref=e79]:
+                    - generic [ref=e80]:
+                      - generic [ref=e81]: Trạng thái
+                      - generic [ref=e82]: 󰁝
+                - row:
+                  - columnheader:
+                    - progressbar [ref=e83]
+              - rowgroup [ref=e87]:
+                - row "Loading items..." [ref=e88]:
+                  - cell "Loading items..." [ref=e89]
+            - separator [ref=e90]
+            - generic [ref=e91]:
+              - generic [ref=e92]:
+                - generic [ref=e93]: "Items per page:"
+                - combobox [ref=e96] [cursor=pointer]:
+                  - generic [ref=e98]:
+                    - generic [ref=e100]: "10"
+                    - combobox "Items per page:": "10"
+                  - generic [ref=e102]: 󰍝
+              - generic [ref=e104]: 0-0 of 0
+              - navigation "Pagination Navigation" [ref=e106]:
+                - list [ref=e107]:
+                  - listitem [ref=e108]:
+                    - button "First page" [disabled]:
+                      - generic:
+                        - generic: 󰘀
+                  - listitem [ref=e109]:
+                    - button "Previous page" [disabled]:
+                      - generic:
+                        - generic: 󰅁
+                  - listitem [ref=e110]:
+                    - button "Next page" [disabled]:
+                      - generic:
+                        - generic: 󰅂
+                  - listitem [ref=e111]:
+                    - button "Last page" [disabled]:
+                      - generic:
+                        - generic: 󰘁
+    - contentinfo [ref=e112]:
+      - generic [ref=e113]: © 2024 Hệ thống Phân tán - Microservice
+  - generic:
+    - dialog: 󰍝 󰍝 󰍝 󰐕
+    - dialog: 󰍝 󰍝

@@ -1,0 +1,102 @@
+global:
+  imageTag: "v1.0.0-local"
+
+# Bật/tắt từng service qua flag
+api-gateway:
+  enabled: true
+
+auth-api:
+  enabled: true
+
+business-api:
+  enabled: true
+
+order-api:
+  enabled: true
+
+handle-worker:
+  enabled: true
+
+ledger-worker:
+  enabled: true
+
+voucher-worker:
+  enabled: true
+
+frontend:
+  enabled: true
+
+# MySQL: 2 instance tách biệt (master_db + business_db)
+# alias trong Chart.yaml đã lowercase (mysqlmaster / mysqlbusiness) để K8s chấp nhận
+mysql:
+  enabled: true
+  auth:
+    rootPassword: "P@ssw0rd123"
+    database: "master_db"
+  primary:
+    persistence:
+      size: 5Gi
+    resources:
+      requests:
+        cpu: 150m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+  service:
+    type: ClusterIP
+  image:
+    repository: mysql
+    tag: "8.0"
+
+# MySQL business_db (alias mysqlbusiness trong Chart.yaml)
+mysqlbusiness:
+  enabled: true
+  auth:
+    rootPassword: "P@ssw0rd123"
+    database: "business_db"
+  primary:
+    persistence:
+      size: 5Gi
+    resources:
+      requests:
+        cpu: 150m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+  service:
+    type: ClusterIP
+  image:
+    repository: mysql
+    tag: "8.0"
+
+# Kafka (KRaft mode - không cần Zookeeper)
+kafka:
+  enabled: true
+  kraft:
+    enabled: true
+  replicaCount: 1
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1.5Gi
+  service:
+    type: ClusterIP
+
+# Cấu hình Secret chung cho JWT
+jwt:
+  secretKey: "Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026"
+  issuer: "Ecom.AuthApi"
+  audience: "Ecom.Client"
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  host: "ecom.local"

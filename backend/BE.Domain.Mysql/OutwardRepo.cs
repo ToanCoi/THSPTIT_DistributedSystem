@@ -71,5 +71,18 @@ namespace BE.Domain.Mysql
 
             return rows > 0;
         }
+
+        /// <inheritdoc />
+        public async Task<decimal?> GetLatestOutwardPriceAsync(Guid productId)
+        {
+            const string sql = @"
+                SELECT unit_price FROM outwards
+                WHERE product_id = @productId
+                ORDER BY created_date DESC
+                LIMIT 1";
+
+            using var connection = new MySqlConnection(_connectionString);
+            return await connection.QueryFirstOrDefaultAsync<decimal?>(sql, new { productId = productId.ToString() });
+        }
     }
 }

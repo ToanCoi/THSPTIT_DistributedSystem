@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="NLog" Version="5.3.4" />
+    <PackageReference Include="Confluent.Kafka" Version="2.6.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +19,7 @@
     <ProjectReference Include="..\BE.Domain.Mysql\BE.Domain.Mysql.csproj" />
     <ProjectReference Include="..\BE.Application.Contracts\BE.Application.Contracts.csproj" />
     <ProjectReference Include="..\BE.HostBase\BE.HostBase.csproj" />
+    <ProjectReference Include="..\Workers\Workers.Shared\Workers.Shared.csproj" />
   </ItemGroup>
 
 </Project>

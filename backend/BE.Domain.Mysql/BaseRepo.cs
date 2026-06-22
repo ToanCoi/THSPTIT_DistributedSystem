@@ -606,17 +606,16 @@ namespace BE.Domain.Mysql
         /// Lấy dữ liệu phân trang từ cơ sở dữ liệu
         /// </summary>
         /// <typeparam name="T">Kiểu dữ liệu của đối tượng</typeparam>
-        /// <param name="type">Kiểu dữ liệu chứa tên bảng</param>
         /// <param name="columns">Các cột cần lấy</param>
         /// <param name="skip">Số bản ghi bỏ qua</param>
         /// <param name="take">Số bản ghi cần lấy</param>
         /// <param name="sort">Câu lệnh sắp xếp</param>
         /// <param name="filters">Câu lệnh lọc</param>
         /// <returns>Kết quả phân trang</returns>
-        public async Task<PagingResult> GetPaging<T>(Type type, string columns, int skip, int take, string sort, string filters = null)
+        public async Task<PagingResult> GetPaging<T>(string columns, int skip, int take, string sort, string filters = null)
         {
             using var connection = new MySqlConnection(_connectionString);
-            var tableName = GetTableName(type);
+            var tableName = GetTableName(typeof(T));
 
             var whereClause = string.IsNullOrEmpty(filters) ? "" : $"WHERE {filters}";
             var orderClause = string.IsNullOrEmpty(sort) ? "ORDER BY created_date DESC" : $"ORDER BY {sort}";
@@ -641,14 +640,13 @@ namespace BE.Domain.Mysql
         /// Lấy tổng số bản ghi từ cơ sở dữ liệu với bộ lọc
         /// </summary>
         /// <typeparam name="T">Kiểu dữ liệu của đối tượng</typeparam>
-        /// <param name="type">Kiểu dữ liệu chứa tên bảng</param>
         /// <param name="columns">Các cột cần lấy</param>
         /// <param name="filters">Câu lệnh lọc</param>
         /// <returns>Kết quả tổng hợp phân trang</returns>
-        public async Task<PagingSummaryResult> GetPagingSummary<T>(Type type, string columns, string filters = null)
+        public async Task<PagingSummaryResult> GetPagingSummary<T>(string columns, string filters = null)
         {
             using var connection = new MySqlConnection(_connectionString);
-            var tableName = GetTableName(type);
+            var tableName = GetTableName(typeof(T));
 
             var whereClause = string.IsNullOrEmpty(filters) ? "" : $"WHERE {filters}";
             var countSql = $"SELECT COUNT(*) FROM {tableName} {whereClause}";

@@ -24,5 +24,15 @@ namespace BE.Domain.DI.Inward
         /// Thêm phiếu nhập mới
         /// </summary>
         Task<bool> InsertAsync(InwardEntity inward);
+
+        /// <summary>
+        /// Lấy giá nhập gần nhất của sản phẩm
+        /// </summary>
+        Task<decimal?> GetLatestInwardPriceAsync(Guid productId);
+
+        /// <summary>
+        /// Lấy giá bán gần nhất từ phiếu nhập
+        /// </summary>
+        Task<decimal?> GetLatestSellingPriceAsync(Guid productId);
     }
 }

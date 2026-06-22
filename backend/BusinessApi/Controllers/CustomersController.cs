@@ -1,3 +1,4 @@
+using BE.Application.Contracts.Dtos;
 using BE.Application.Contracts.Interfaces.Customer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +34,18 @@ namespace BusinessApi.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _customerService.GetAllAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Lấy danh sách phân trang
+        /// </summary>
+        /// <param name="filter">Filter phân trang</param>
+        /// <returns>Danh sách phân trang</returns>
+        [HttpGet("paging")]
+        public async Task<IActionResult> GetAllPaging([FromQuery] PagingFilterDto filter)
+        {
+            var result = await _customerService.GetAllPagingAsync(filter);
             return Ok(result);
         }
 

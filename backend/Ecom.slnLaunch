@@ -17,6 +17,14 @@
       {
         "Path": "OrderApi\\OrderApi.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "Workers\\LedgerWorker\\LedgerWorker.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Workers\\VoucherWorker\\VoucherWorker.csproj",
+        "Action": "Start"
       }
     ]
   }

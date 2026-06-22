@@ -23,5 +23,10 @@ namespace BE.Domain.DI.Ledger
         /// Cập nhật số dư đóng (closing)
         /// </summary>
         Task<bool> UpsertClosingAsync(Guid productId, Guid stockId, decimal quantity);
+
+        /// <summary>
+        /// Lấy số lượng tồn kho của sản phẩm theo kho
+        /// </summary>
+        Task<decimal> GetClosingQuantityAsync(Guid productId, Guid stockId);
     }
 }

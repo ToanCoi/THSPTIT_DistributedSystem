@@ -1,3 +1,4 @@
+using BE.Application.Contracts.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,6 +19,11 @@ namespace BE.Application.Contracts.Interfaces.Outward
         /// Lấy tất cả phiếu xuất
         /// </summary>
         Task<IEnumerable<OutwardDto>> GetAllAsync();
+
+        /// <summary>
+        /// Lấy danh sách phân trang
+        /// </summary>
+        Task<PagingResult<OutwardDto>> GetAllPagingAsync(PagingFilterDto filter);
 
         /// <summary>
         /// Tạo phiếu xuất mới

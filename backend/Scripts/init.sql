@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS inwards (
     stock_id VARCHAR(36),
     quantity DECIMAL(18,4),
     unit_price DECIMAL(18,2),
+    selling_price DECIMAL(18,2) DEFAULT 0,
     supplier VARCHAR(255),
     invoice_date DATE,
     created_date DATETIME,

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: api-gateway
+description: API Gateway for Ecom microservices (custom ASP.NET Core reverse proxy)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - api-gateway
+  - microservice
+  - ecom

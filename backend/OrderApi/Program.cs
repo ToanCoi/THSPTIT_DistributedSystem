@@ -2,6 +2,7 @@ using BE.Application.Contracts.Interfaces.Order;
 using BE.Application.Services.Order;
 using BE.Domain.DI.Order;
 using BE.Domain.Mysql;
+using BE.Domain.Repos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using NLog;
@@ -21,7 +22,13 @@ var fileTarget = new FileTarget("logfile")
     FileName = Path.Combine(logDirectory, "${shortdate}.log"),
     Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}"
 };
+var consoleTarget = new ConsoleTarget("logconsole")
+{
+    Layout = "${longdate} | ${level:uppercase=true} | ${logger} | ${message} | ${exception:format=tostring}",
+    StdErr = true
+};
 config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, consoleTarget);
 LogManager.Configuration = config;
 
 var logger = NLog.LogManager.GetCurrentClassLogger();
@@ -56,6 +63,7 @@ var connectionString = builder.Configuration.GetConnectionString("BusinessConnec
     ?? "Server=localhost;Port=3306;Database=business_db;User=root;Password=Mysql!110720;";
 
 // Đăng ký repositories
+builder.Services.AddScoped<IBaseRepo>(sp => new DapperRepo(connectionString));
 builder.Services.AddScoped<IOrderRepo>(sp => new OrderRepo(connectionString));
 builder.Services.AddScoped<IOrderItemRepo>(sp => new OrderItemRepo(connectionString));
 

@@ -1,0 +1,15 @@
+# ConfigMap chứa FQDN cho các service - dùng cho debug, không bắt buộc.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecom-fqdn
+  labels:
+    app.kubernetes.io/part-of: ecom-stack
+data:
+  API_GATEWAY_FQDN: "api-gateway.{{ .Release.Namespace }}.svc.cluster.local"
+  AUTH_API_FQDN: "auth-api.{{ .Release.Namespace }}.svc.cluster.local"
+  BUSINESS_API_FQDN: "business-api.{{ .Release.Namespace }}.svc.cluster.local"
+  ORDER_API_FQDN: "order-api.{{ .Release.Namespace }}.svc.cluster.local"
+  KAFKA_FQDN: "kafka.{{ .Release.Namespace }}.svc.cluster.local"
+  MYSQL_MASTER_FQDN: "ecom-mysql-master.{{ .Release.Namespace }}.svc.cluster.local"
+  MYSQL_BUSINESS_FQDN: "ecom-mysql-business.{{ .Release.Namespace }}.svc.cluster.local"

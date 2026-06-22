@@ -55,5 +55,10 @@ namespace BE.Domain.DI.Order
         /// Thêm nhiều chi tiết đơn hàng
         /// </summary>
         Task<bool> InsertManyAsync(IEnumerable<OrderItemEntity> orderItems);
+
+        /// <summary>
+        /// Xóa chi tiết đơn hàng theo order ID
+        /// </summary>
+        Task<bool> DeleteByOrderIdAsync(Guid orderId);
     }
 }

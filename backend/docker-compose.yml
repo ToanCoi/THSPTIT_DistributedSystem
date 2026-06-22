@@ -46,26 +46,31 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Kafka Broker
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: ecom-kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "9092:9092"
+      - "9093:9093"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # API Gateway (Port 5000)
   api-gateway:
@@ -98,6 +103,7 @@ services:
       - "5001:5001"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
       - ConnectionStrings__Default=Server=mysql-master;Database=master_db;User=root;Password=P@ssw0rd123;
       - Jwt__SecretKey=Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026
       - Jwt__Issuer=Ecom.AuthApi
@@ -116,10 +122,13 @@ services:
       - "5002:5002"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
       - ConnectionStrings__BusinessConnection=Server=mysql-business;Database=business_db;User=root;Password=P@ssw0rd123;
       - Jwt__SecretKey=Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026
       - Jwt__Issuer=Ecom.AuthApi
       - Jwt__Audience=Ecom.Client
+      - Kafka__BootstrapServers=host.docker.internal:9093
+      - Kafka__LedgerTopic=ledger-change
     depends_on:
       mysql-business:
         condition: service_healthy
@@ -134,11 +143,12 @@ services:
       - "5003:5003"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5003
       - ConnectionStrings__BusinessConnection=Server=mysql-business;Database=business_db;User=root;Password=P@ssw0rd123;
       - Jwt__SecretKey=Ecom_Microservice_SecretKey_MustBeAtLeast32Characters!2026
       - Jwt__Issuer=Ecom.AuthApi
       - Jwt__Audience=Ecom.Client
-      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__BootstrapServers=host.docker.internal:9093
       - Kafka__Topic=order-created
     depends_on:
       mysql-business:
@@ -146,17 +156,35 @@ services:
       kafka:
         condition: service_healthy
 
-  # Handle Worker (Kafka Consumer)
-  handle-worker:
+  # Ledger Worker (Kafka Consumer - ghi sổ tồn kho)
+  ledger-worker:
     build:
       context: .
-      dockerfile: HandleWorker/Dockerfile
-    container_name: ecom-handle-worker
+      dockerfile: Workers/LedgerWorker/Dockerfile
+    container_name: ecom-ledger-worker
     environment:
       - ConnectionStrings__BusinessConnection=Server=mysql-business;Database=business_db;User=root;Password=P@ssw0rd123;
-      - Kafka__BootstrapServers=kafka:9092
-      - Kafka__GroupId=handle-worker-group
+      - Kafka__BootstrapServers=host.docker.internal:9093
+      - Kafka__LedgerTopic=ledger-change
+      - Kafka__LedgerGroupId=ledger-worker-group
+    depends_on:
+      mysql-business:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # Voucher Worker (Kafka Consumer - sinh phiếu xuất kho)
+  voucher-worker:
+    build:
+      context: .
+      dockerfile: Workers/VoucherWorker/Dockerfile
+    container_name: ecom-voucher-worker
+    environment:
+      - ConnectionStrings__BusinessConnection=Server=mysql-business;Database=business_db;User=root;Password=P@ssw0rd123;
+      - Kafka__BootstrapServers=host.docker.internal:9093
       - Kafka__Topic=order-created
+      - Kafka__GroupId=voucher-worker-group
+      - Kafka__LedgerTopic=ledger-change
     depends_on:
       mysql-business:
         condition: service_healthy

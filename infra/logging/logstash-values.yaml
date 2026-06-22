@@ -1,0 +1,84 @@
+# Values override cho chart elastic/logstash
+# Parse log format NLog: longdate | level | logger | message | exception
+
+replicas: 1
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9600
+      targetPort: 9600
+    - name: beats
+      port: 5044
+      targetPort: 5044
+
+containerPorts:
+  - name: beats
+    containerPort: 5044
+    protocol: TCP
+
+logstashConfig:
+  logstash.yml: |
+    http.host: 0.0.0.0
+    xpack.monitoring.enabled: false
+
+logstashPipeline:
+  ecom.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+    filter {
+      # CRI/K8s wrap: container log đã có timestamp + stream prefix. NLog format trong message:
+      # 2026-06-20 10:23:45.1234 | INFO | Namespace.Class | message | exception
+      if [message] =~ /^\d{4}-\d{2}-\d{2}/ {
+        grok {
+          match => {
+            "message" => "%{TIMESTAMP_ISO8601:log_ts}\s*\|\s*%{WORD:level}\s*\|\s*%{DATA:logger}\s*\|\s*%{GREEDYDATA:msg}"
+          }
+          tag_on_failure => ["_grokparsefailure_ecom"]
+        }
+        date {
+          match => ["log_ts", "yyyy-MM-dd HH:mm:ss.SSS"]
+          target => "@timestamp"
+          tag_on_failure => ["_dateparsefailure_ecom"]
+        }
+        mutate {
+          add_field => { "[@metadata][index_prefix]" => "ecom-logs" }
+          remove_field => ["log_ts", "agent.ephemeral_id", "ecs", "host.os", "input.type"]
+        }
+      } else {
+        mutate {
+          add_field => { "[@metadata][index_prefix]" => "ecom-logs-raw" }
+        }
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => ["https://elasticsearch-master:9200"]
+        user => "elastic"
+        password => "${ES_PASSWORD}"
+        ssl_enabled => true
+        ssl_verification_mode => "none"
+        index => "%{[@metadata][index_prefix]}-%{+YYYY.MM.dd}"
+      }
+    }
+
+extraEnvs:
+  - name: LS_JAVA_OPTS
+    value: "-Xms256m -Xmx512m"
+  - name: ES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-credentials
+        key: password
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi

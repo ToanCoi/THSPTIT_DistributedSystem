@@ -5,18 +5,15 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace HandleWorker
+namespace Workers.LedgerWorker
 {
     /// <summary>
-    /// Service xử lý nghiệp vụ sổ cái tồn kho - ghi ledger khi có đơn hàng
+    /// Service xử lý nghiệp vụ sổ cái tồn kho - ghi ledger khi có phiếu nhập/xuất kho
     /// </summary>
     public class LedgerService : ILedgerService
     {
         private readonly ILedgerRepo _ledgerRepo;
         private readonly ILogger<LedgerService> _logger;
-
-        // Mặc định stock_id = Kho chính (sẽ lấy từ config hoặc DB)
-        private readonly Guid _defaultStockId = Guid.Parse("c3d4e5f6-a7b8-9012-cdef-345678901234");
 
         public LedgerService(ILedgerRepo ledgerRepo, ILogger<LedgerService> logger)
         {
@@ -25,45 +22,7 @@ namespace HandleWorker
         }
 
         /// <inheritdoc />
-        public async Task ProcessOrderItemAsync(Guid orderId, Guid productId, decimal quantity, decimal unitPrice)
-        {
-            _logger.LogInformation("Processing order item: order={order_id}, product={product_id}, qty={quantity}",
-                orderId, productId, quantity);
-
-            var now = DateTime.UtcNow;
-
-            // 1. Insert vào led_inventory_item_ledger
-            var ledger = new LedgerEntity
-            {
-                ledger_id = Guid.NewGuid(),
-                product_id = productId,
-                stock_id = _defaultStockId,
-                inward_quantity = 0,
-                outward_quantity = quantity,
-                reference_id = orderId,
-                reference_type = "ORDER",
-                ledger_date = now,
-                created_date = now,
-                created_by = "HandleWorker"
-            };
-
-            await _ledgerRepo.InsertAsync(ledger);
-            _logger.LogInformation("Inserted ledger record for order {order_id}", orderId);
-
-            // 2. Upsert vào led_inventory_item_ledger_date (cập nhật tồn kho theo ngày)
-            await _ledgerRepo.UpsertLedgerDateAsync(productId, _defaultStockId, 0, quantity, now);
-            _logger.LogInformation("Updated ledger date for product {product_id}", productId);
-
-            // 3. Upsert vào led_inventory_item_ledger_closing (cập nhật số dư đóng)
-            // Số dư đóng = tổng nhập - tổng xuất (cần tính toán thực tế trong production)
-            // Trong demo này, giảm quantity vì là xuất kho
-            var closingQty = -quantity; // Sẽ cần tính toán chính xác hơn trong production
-            await _ledgerRepo.UpsertClosingAsync(productId, _defaultStockId, closingQty);
-            _logger.LogInformation("Updated closing balance for product {product_id}", productId);
-        }
-
-        /// <inheritdoc />
-        public async Task ProcessInwardAsync(Guid inwardId, Guid productId, Guid stockId, decimal quantity, decimal unitPrice)
+        public async Task ProcessInwardAsync(Guid inwardId, Guid productId, Guid stockId, decimal quantity)
         {
             _logger.LogInformation("Processing inward: inward={inward_id}, product={product_id}, qty={quantity}",
                 inwardId, productId, quantity);
@@ -82,7 +41,7 @@ namespace HandleWorker
                 reference_type = "INWARD",
                 ledger_date = now,
                 created_date = now,
-                created_by = "HandleWorker"
+                created_by = "LedgerWorker"
             };
 
             await _ledgerRepo.InsertAsync(ledger);
@@ -98,7 +57,7 @@ namespace HandleWorker
         }
 
         /// <inheritdoc />
-        public async Task ProcessOutwardAsync(Guid outwardId, Guid productId, Guid stockId, decimal quantity, decimal unitPrice)
+        public async Task ProcessOutwardAsync(Guid outwardId, Guid productId, Guid stockId, decimal quantity)
         {
             _logger.LogInformation("Processing outward: outward={outward_id}, product={product_id}, qty={quantity}",
                 outwardId, productId, quantity);
@@ -117,7 +76,7 @@ namespace HandleWorker
                 reference_type = "OUTWARD",
                 ledger_date = now,
                 created_date = now,
-                created_by = "HandleWorker"
+                created_by = "LedgerWorker"
             };
 
             await _ledgerRepo.InsertAsync(ledger);
@@ -125,11 +84,23 @@ namespace HandleWorker
             // Upsert ledger date
             await _ledgerRepo.UpsertLedgerDateAsync(productId, stockId, 0, quantity, now);
 
-            // Upsert closing (giảm tồn kho)
-            var closingQty = -quantity;
-            await _ledgerRepo.UpsertClosingAsync(productId, stockId, closingQty);
+            // Upsert closing (giảm tồn kho - SQL cộng dồn nên truyền số âm)
+            await _ledgerRepo.UpsertClosingAsync(productId, stockId, -quantity);
 
             _logger.LogInformation("Processed outward {outward_id}", outwardId);
+        }
+
+        /// <inheritdoc />
+        public async Task ProcessOrderItemAsync(Guid orderId, Guid productId, Guid stockId, decimal quantity, decimal unitPrice)
+        {
+            var outwardId = Guid.NewGuid();
+            _logger.LogInformation("Processing order item: order={order_id}, product={product_id}, stock={stock_id}, qty={quantity}",
+                orderId, productId, stockId, quantity);
+
+            await ProcessOutwardAsync(outwardId, productId, stockId, quantity);
+
+            _logger.LogInformation("Processed order item {order_id}/{product_id} -> outward {outward_id}",
+                orderId, productId, outwardId);
         }
     }
 }
