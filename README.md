@@ -70,7 +70,7 @@ Hệ thống gồm 4 API + 2 worker + 1 API Gateway + 1 SPA, giao tiếp qua RES
 | 2 | [docs/02-architecture/](docs/02-architecture/README.md) | **Kiến trúc** — sơ đồ hệ thống, catalog services, giao tiếp REST + Kafka, cấu trúc code backend/frontend |
 | 3 | [docs/03-deployment/](docs/03-deployment/README.md) | **Triển khai** — yêu cầu phần cứng/công cụ, build & run local, deploy k8s local trên minikube |
 
-> **Cần diagram để thuyết trình?** Xem [docs/02-architecture/diagrams.md](docs/02-architecture/diagrams.md) — Mermaid: component overview, Kafka routing, state machine Order/Voucher, k8s deployment topology.
+>  Xem [docs/02-architecture/diagrams.md](docs/02-architecture/diagrams.md) — Mermaid: component overview, Kafka routing, state machine Order/Voucher, k8s deployment topology.
 
 ## Quick start
 
