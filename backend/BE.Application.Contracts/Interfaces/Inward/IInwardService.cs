@@ -29,6 +29,16 @@ namespace BE.Application.Contracts.Interfaces.Inward
         /// Tạo phiếu nhập mới
         /// </summary>
         Task<InwardDto> CreateAsync(InwardCreateDto dto);
+
+        /// <summary>
+        /// Cập nhật phiếu nhập
+        /// </summary>
+        Task<InwardDto> UpdateAsync(Guid inwardId, InwardUpdateDto dto);
+
+        /// <summary>
+        /// Xóa phiếu nhập (publish ledger UPDATE quantity=0 để reverse, rồi xóa DB)
+        /// </summary>
+        Task<bool> RemoveAsync(Guid inwardId);
     }
 
     /// <summary>
@@ -38,9 +48,12 @@ namespace BE.Application.Contracts.Interfaces.Inward
     {
         public Guid inward_id { get; set; }
         public Guid product_id { get; set; }
+        public string? product_name { get; set; }
         public Guid stock_id { get; set; }
+        public string? stock_name { get; set; }
         public decimal quantity { get; set; }
         public decimal unit_price { get; set; }
+        public decimal selling_price { get; set; }
         public string supplier { get; set; }
         public DateTime invoice_date { get; set; }
         public DateTime created_date { get; set; }
@@ -50,6 +63,20 @@ namespace BE.Application.Contracts.Interfaces.Inward
     /// DTO tạo phiếu nhập
     /// </summary>
     public class InwardCreateDto
+    {
+        public Guid product_id { get; set; }
+        public Guid stock_id { get; set; }
+        public decimal quantity { get; set; }
+        public decimal unit_price { get; set; }
+        public decimal selling_price { get; set; }
+        public string supplier { get; set; }
+        public DateTime invoice_date { get; set; }
+    }
+
+    /// <summary>
+    /// DTO cập nhật phiếu nhập
+    /// </summary>
+    public class InwardUpdateDto
     {
         public Guid product_id { get; set; }
         public Guid stock_id { get; set; }

@@ -24,6 +24,12 @@ helm upgrade --install ecom-stack "${ROOT_INFRA}/charts/ecom-stack" \
   --set global.imageTag="${TAG}" \
   --wait --timeout 8m
 
+# Kafka: Bitnami chart đã tắt trong umbrella (xem values.yaml).
+# Deploy thủ công bằng apache/kafka:3.8.1 (KRaft mode) — image này còn trên Docker Hub,
+# trong khi bitnami/kafka đã bị gỡ khỏi free tier (late 2025).
+echo "[deploy-stack] Apply custom Kafka (apache/kafka:3.8.1)..."
+kubectl apply -n "${NS_APP}" -f "${ROOT_INFRA}/k8s/kafka.yaml"
+
 echo "[deploy-stack] Hoàn tất. Trạng thái pods:"
 kubectl -n "${NS_APP}" get pods
 echo "[deploy-stack] Ingress:"

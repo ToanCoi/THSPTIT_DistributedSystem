@@ -2,6 +2,12 @@
 -- Database Initialization Script for Ecom Microservices
 -- =====================================================
 
+-- Cho phép root truy cập từ mọi host (image mysql:8.0 chính thức chỉ tạo root@localhost,
+-- khác với bitnami/mysql tạo sẵn root@%). Cần thiết để auth-api từ pod khác kết nối được.
+CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY 'P@ssw0rd123';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
 -- Create master_db for authentication
 CREATE DATABASE IF NOT EXISTS master_db;
 USE master_db;

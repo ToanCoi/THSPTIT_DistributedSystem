@@ -89,7 +89,32 @@ public class LedgerKafkaConsumer : KafkaConsumerBase
             using var scope = ServiceProvider.CreateScope();
             var ledgerService = scope.ServiceProvider.GetRequiredService<ILedgerService>();
 
-            if (ledgerMsg.voucher_type == "INWARD")
+            // Xác định event_type (mặc định CREATE để tương thích với message cũ)
+            var eventType = string.IsNullOrEmpty(ledgerMsg.event_type) ? "CREATE" : ledgerMsg.event_type;
+
+            if (eventType == "UPDATE")
+            {
+                // Xử lý update: cần old_quantity, old_product_id, old_stock_id
+                if (!ledgerMsg.old_quantity.HasValue
+                    || string.IsNullOrEmpty(ledgerMsg.old_product_id)
+                    || string.IsNullOrEmpty(ledgerMsg.old_stock_id))
+                {
+                    Logger.LogWarning("UPDATE message missing old fields: voucher={voucher_id}", ledgerMsg.voucher_id);
+                    return;
+                }
+
+                await ledgerService.ProcessUpdateAsync(
+                    Guid.Parse(ledgerMsg.voucher_id),
+                    ledgerMsg.voucher_type,
+                    Guid.Parse(ledgerMsg.product_id),
+                    Guid.Parse(ledgerMsg.stock_id),
+                    ledgerMsg.quantity,
+                    ledgerMsg.old_quantity.Value,
+                    Guid.Parse(ledgerMsg.old_product_id),
+                    Guid.Parse(ledgerMsg.old_stock_id)
+                );
+            }
+            else if (ledgerMsg.voucher_type == "INWARD")
             {
                 await ledgerService.ProcessInwardAsync(
                     Guid.Parse(ledgerMsg.voucher_id),

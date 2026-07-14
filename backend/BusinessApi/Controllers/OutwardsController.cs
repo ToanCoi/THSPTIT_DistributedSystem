@@ -61,5 +61,26 @@ namespace BusinessApi.Controllers
             var result = await _outwardService.CreateAsync(dto);
             return Created($"/api/outwards/{result.outward_id}", result);
         }
+
+        /// <summary>
+        /// Cập nhật phiếu xuất. Phiếu xuất gắn với đơn hàng sẽ bị từ chối (422).
+        /// </summary>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] OutwardUpdateDto dto)
+        {
+            var result = await _outwardService.UpdateAsync(id, dto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Xóa phiếu xuất. Phiếu xuất gắn với đơn hàng bị từ chối (422).
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var result = await _outwardService.RemoveAsync(id);
+            if (!result) return NotFound();
+            return NoContent();
+        }
     }
 }

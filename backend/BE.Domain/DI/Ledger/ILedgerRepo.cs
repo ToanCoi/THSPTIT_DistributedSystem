@@ -1,5 +1,6 @@
 using BE.Domain.Entities;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BE.Domain.DI.Ledger
@@ -28,5 +29,15 @@ namespace BE.Domain.DI.Ledger
         /// Lấy số lượng tồn kho của sản phẩm theo kho
         /// </summary>
         Task<decimal> GetClosingQuantityAsync(Guid productId, Guid stockId);
+
+        /// <summary>
+        /// Lấy tất cả bản ghi ledger theo reference_id (voucher)
+        /// </summary>
+        Task<IEnumerable<LedgerEntity>> GetByReferenceIdAsync(Guid referenceId);
+
+        /// <summary>
+        /// Xóa tất cả bản ghi ledger theo reference_id (voucher)
+        /// </summary>
+        Task<int> DeleteByReferenceIdAsync(Guid referenceId);
     }
 }

@@ -43,7 +43,6 @@ builder.Services.AddScoped<IOutwardService, BE.Application.Services.Outward.Outw
 var kafkaBootstrapServers = builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9093";
 var kafkaTopic = builder.Configuration["Kafka:Topic"] ?? "order-created";
 var kafkaGroupId = builder.Configuration["Kafka:GroupId"] ?? "voucher-worker-group";
-var ledgerTopic = builder.Configuration["Kafka:LedgerTopic"] ?? "ledger-change";
 
 builder.Services.AddSingleton<IKafkaProducerService>(sp =>
     new KafkaProducerService(kafkaBootstrapServers, sp.GetRequiredService<ILogger<KafkaProducerService>>()));
@@ -52,8 +51,7 @@ builder.Services.AddSingleton(new VoucherWorkerSettings
 {
     BootstrapServers = kafkaBootstrapServers,
     OrderTopic = kafkaTopic,
-    OrderGroupId = kafkaGroupId,
-    LedgerTopic = ledgerTopic
+    OrderGroupId = kafkaGroupId
 });
 
 builder.Services.AddHostedService<VoucherKafkaConsumer>();
@@ -67,7 +65,6 @@ public class VoucherWorkerSettings
     public string BootstrapServers { get; set; } = "localhost:9093";
     public string OrderTopic { get; set; } = "order-created";
     public string OrderGroupId { get; set; } = "voucher-worker-group";
-    public string LedgerTopic { get; set; } = "ledger-change";
 }
 
 public class VoucherKafkaConsumer : BackgroundService
@@ -76,7 +73,6 @@ public class VoucherKafkaConsumer : BackgroundService
     private readonly VoucherWorkerSettings _settings;
     private readonly ILogger<VoucherKafkaConsumer> _logger;
     private IConsumer<string, string> _consumer;
-    private IProducer<string, string> _producer;
 
     public VoucherKafkaConsumer(
         IServiceProvider serviceProvider,
@@ -98,15 +94,7 @@ public class VoucherKafkaConsumer : BackgroundService
             EnableAutoCommit = true
         };
 
-        var producerConfig = new ProducerConfig
-        {
-            BootstrapServers = _settings.BootstrapServers,
-            Acks = Acks.All
-        };
-
         _consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-        _producer = new ProducerBuilder<string, string>(producerConfig).Build();
-
         _consumer.Subscribe(_settings.OrderTopic);
         _logger.LogInformation("VoucherWorker started, consuming topic [{topic}]", _settings.OrderTopic);
 
@@ -131,7 +119,6 @@ public class VoucherKafkaConsumer : BackgroundService
         }
 
         _consumer.Close();
-        _producer.Flush();
     }
 
     private async Task ProcessMessageAsync(string message)
@@ -162,29 +149,11 @@ public class VoucherKafkaConsumer : BackgroundService
                     outward_date = DateTime.UtcNow
                 };
 
+                // OutwardService.CreateAsync đã tự publish ledger-change ở trong nó
+                // → KHÔNG publish lại ở đây, nếu không sẽ bị ghi ledger 2 lần (closing bị trừ 2 lần)
                 var outward = await outwardService.CreateAsync(outwardDto);
                 _logger.LogInformation("Created outward [{outward_id}] for order {order_id}",
                     outward.outward_id, orderMsg.order_id);
-
-                // Push ledger-change
-                var ledgerMsg = new LedgerChangeMessage
-                {
-                    voucher_id = outward.outward_id.ToString(),
-                    voucher_type = "OUTWARD",
-                    product_id = item.product_id,
-                    stock_id = orderMsg.stock_id,
-                    quantity = item.quantity,
-                    timestamp = DateTime.UtcNow.ToString("o")
-                };
-
-                var json = System.Text.Json.JsonSerializer.Serialize(ledgerMsg);
-                await _producer.ProduceAsync(_settings.LedgerTopic, new Message<string, string>
-                {
-                    Key = outward.outward_id.ToString(),
-                    Value = json
-                });
-
-                _logger.LogInformation("Published ledger-change for outward [{outward_id}]", outward.outward_id);
             }
         }
         catch (Exception ex)

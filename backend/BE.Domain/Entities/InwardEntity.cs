@@ -56,5 +56,15 @@ namespace BE.Domain.Entities
         /// Người tạo
         /// </summary>
         public string created_by { get; set; }
+
+        /// <summary>
+        /// Tên sản phẩm (JOIN từ bảng products, dùng cho hiển thị)
+        /// </summary>
+        public string? product_name { get; set; }
+
+        /// <summary>
+        /// Tên kho (JOIN từ bảng stocks, dùng cho hiển thị)
+        /// </summary>
+        public string? stock_name { get; set; }
     }
 }

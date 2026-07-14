@@ -26,6 +26,11 @@ namespace BE.Domain.DI.Inward
         Task<bool> InsertAsync(InwardEntity inward);
 
         /// <summary>
+        /// Cập nhật phiếu nhập
+        /// </summary>
+        Task<bool> UpdateAsync(InwardEntity inward);
+
+        /// <summary>
         /// Lấy giá nhập gần nhất của sản phẩm
         /// </summary>
         Task<decimal?> GetLatestInwardPriceAsync(Guid productId);
@@ -34,5 +39,10 @@ namespace BE.Domain.DI.Inward
         /// Lấy giá bán gần nhất từ phiếu nhập
         /// </summary>
         Task<decimal?> GetLatestSellingPriceAsync(Guid productId);
+
+        /// <summary>
+        /// Xóa phiếu nhập theo ID (reverse ledger qua Kafka trước khi xóa)
+        /// </summary>
+        Task<bool> DeleteAsync(Guid inwardId);
     }
 }

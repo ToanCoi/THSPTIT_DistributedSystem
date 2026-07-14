@@ -16,7 +16,10 @@ resources:
     memory: 384Mi
 
 env:
-  ConnectionStrings__BusinessConnection: "Server=ecom-stack-mysqlbusiness.ecom.svc.cluster.local;Port=3306;Database=business_db;User=root;Password=P@ssw0rd123;"
+  # Trỏ vào MySQL local trên Windows host (xem infra/charts/ecom-stack/values.yaml → global.localMysql).
+  # Helm không render Go template trong values.yaml, nên phải hardcode ở đây.
+  # ROLLBACK: Server=ecom-stack-mysqlbusiness.ecom.svc.cluster.local;Port=3306;Database=business_db;User=root;Password=P@ssw0rd123;
+  ConnectionStrings__BusinessConnection: "Server=host.minikube.internal;Port=3306;Database=business_db;User=root;Password=Mysql!110720;"
   Kafka__BootstrapServers: "kafka.ecom.svc.cluster.local:9092"
   Kafka__LedgerTopic: "ledger-change"
   Kafka__LedgerGroupId: "ledger-worker-group"

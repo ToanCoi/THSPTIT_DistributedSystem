@@ -3,6 +3,7 @@ using BE.Domain.DI.Ledger;
 using BE.Domain.Entities;
 using MySqlConnector;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BE.Domain.Mysql
@@ -16,6 +17,7 @@ namespace BE.Domain.Mysql
 
         public LedgerRepo(string connectionString)
         {
+            DapperSetup.RegisterGuidTypeHandler();
             _connectionString = connectionString;
         }
 
@@ -113,6 +115,30 @@ namespace BE.Domain.Mysql
                 productId = productId.ToString(),
                 stockId = stockId.ToString()
             });
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<LedgerEntity>> GetByReferenceIdAsync(Guid referenceId)
+        {
+            const string sql = @"
+                SELECT ledger_id, product_id, stock_id, inward_quantity, outward_quantity,
+                       reference_id, reference_type, ledger_date, created_date, created_by
+                FROM led_inventory_item_ledger
+                WHERE reference_id = @referenceId
+                ORDER BY created_date ASC";
+
+            using var connection = new MySqlConnection(_connectionString);
+            IEnumerable<LedgerEntity> result = await connection.QueryAsync<LedgerEntity>(sql, new { referenceId = referenceId.ToString() });
+            return result;
+        }
+
+        /// <inheritdoc />
+        public async Task<int> DeleteByReferenceIdAsync(Guid referenceId)
+        {
+            const string sql = @"DELETE FROM led_inventory_item_ledger WHERE reference_id = @referenceId";
+
+            using var connection = new MySqlConnection(_connectionString);
+            return await connection.ExecuteAsync(sql, new { referenceId = referenceId.ToString() });
         }
     }
 }

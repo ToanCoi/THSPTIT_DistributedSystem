@@ -7,10 +7,13 @@ using BE.Application.Contracts.Interfaces.Order;
 using BE.Application.Exceptions;
 using Confluent.Kafka;
 using BE.Domain.DI.Order;
+using BE.Domain.DI.Outward;
 using BE.Domain.Entities;
 using BE.Domain.Repos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Workers.Shared.Models;
+using Workers.Shared.Services;
 
 namespace BE.Application.Services.Order
 {
@@ -28,18 +31,26 @@ namespace BE.Application.Services.Order
 
         private readonly IConfiguration _configuration;
 
+        private readonly IOutwardRepo _outwardRepo;
+        private readonly IKafkaProducerService _ledgerProducer;
+        private readonly string _ledgerTopic;
+
         public OrderService(
             IOrderRepo orderRepo,
             IOrderItemRepo orderItemRepo,
             IBaseRepo baseRepo,
             ILogger<OrderService> logger,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IOutwardRepo outwardRepo,
+            IKafkaProducerService ledgerProducer)
         {
             _orderRepo = orderRepo;
             _orderItemRepo = orderItemRepo;
             _baseRepo = baseRepo;
             _logger = logger;
             _configuration = configuration;
+            _outwardRepo = outwardRepo;
+            _ledgerProducer = ledgerProducer;
 
             // Cấu hình Kafka producer từ config
             var producerConfig = new ProducerConfig
@@ -51,6 +62,7 @@ namespace BE.Application.Services.Order
             };
             _kafkaProducer = new ProducerBuilder<string, string>(producerConfig).Build();
             _kafkaTopic = _configuration["Kafka:Topic"] ?? "order-created";
+            _ledgerTopic = _configuration["Kafka:LedgerTopic"] ?? "ledger-change";
         }
 
         /// <inheritdoc />
@@ -82,7 +94,7 @@ namespace BE.Application.Services.Order
         /// <inheritdoc />
         public async Task<PagingResult<OrderDto>> GetAllPagingAsync(PagingFilterDto filter)
         {
-            var columns = "order_id, customer_id, order_code, total_amount, status, order_date, created_date";
+            var columns = "order_id, customer_id, stock_id, order_code, total_amount, status, order_date, created_date";
             var sort = $"{filter.sort_field} {filter.sort_order}";
 
             var pagingResult = await _baseRepo.GetPaging<OrderEntity>(
@@ -118,10 +130,11 @@ namespace BE.Application.Services.Order
             {
                 order_id = Guid.NewGuid(),
                 customer_id = dto.customer_id,
-                order_code = GenerateOrderCode(),
+                stock_id = dto.stock_id,
+                order_code = await GenerateOrderCodeAsync(),
                 total_amount = 0,
                 status = "PENDING",
-                order_date = dto.order_date,
+                order_date = DateTime.UtcNow,
                 created_date = DateTime.UtcNow,
                 created_by = "system"
             };
@@ -190,6 +203,7 @@ namespace BE.Application.Services.Order
 
             // Cập nhật thông tin đơn hàng
             order.customer_id = dto.customer_id;
+            order.stock_id = dto.stock_id;
             order.order_date = dto.order_date;
 
             // Tính lại tổng tiền
@@ -257,11 +271,12 @@ namespace BE.Application.Services.Order
         }
 
         /// <summary>
-        /// Tạo mã đơn hàng tự động
+        /// Tạo mã đơn hàng tự động (DH + sequence int, atomic với row lock)
         /// </summary>
-        private string GenerateOrderCode()
+        private async Task<string> GenerateOrderCodeAsync()
         {
-            return $"ORD{DateTime.UtcNow:yyyyMMddHHmmss}{Guid.NewGuid().ToString()[..4].ToUpper()}";
+            var next = await _orderRepo.GetNextOrderCodeAsync();
+            return $"DH{next}";
         }
 
         private OrderDto MapToDto(OrderEntity order, IEnumerable<OrderItemEntity> items)
@@ -270,6 +285,9 @@ namespace BE.Application.Services.Order
             {
                 order_id = order.order_id,
                 customer_id = order.customer_id,
+                customer_name = order.customer_name,
+                stock_id = order.stock_id,
+                stock_name = order.stock_name,
                 order_code = order.order_code,
                 total_amount = order.total_amount,
                 status = order.status,
@@ -283,6 +301,44 @@ namespace BE.Application.Services.Order
                     unit_price = i.unit_price
                 }).ToList()
             };
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> RemoveAsync(Guid orderId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId);
+            if (order == null)
+            {
+                throw new BusinessException("Không tìm thấy đơn hàng", 404);
+            }
+
+            // 1. Publish ledger UPDATE (quantity=0) cho từng phiếu xuất gắn với đơn hàng
+            //    để LedgerWorker reverse impact cũ (ProcessUpdateAsync xử lý newQuantity=0)
+            var outwards = (await _outwardRepo.GetByOrderIdAsync(orderId)).ToList();
+            foreach (var outward in outwards)
+            {
+                var ledgerMsg = new LedgerChangeMessage
+                {
+                    voucher_id = outward.outward_id.ToString(),
+                    voucher_type = "OUTWARD",
+                    product_id = outward.product_id.ToString(),
+                    stock_id = outward.stock_id.ToString(),
+                    quantity = 0,
+                    timestamp = DateTime.UtcNow.ToString("o"),
+                    event_type = "UPDATE",
+                    old_quantity = outward.quantity,
+                    old_product_id = outward.product_id.ToString(),
+                    old_stock_id = outward.stock_id.ToString()
+                };
+                var json = System.Text.Json.JsonSerializer.Serialize(ledgerMsg);
+                await _ledgerProducer.ProduceAsync(_ledgerTopic,
+                    outward.outward_id.ToString(), json);
+            }
+
+            // 2. Xóa phiếu xuất, chi tiết đơn, đơn hàng
+            await _outwardRepo.DeleteByOrderIdAsync(orderId);
+            await _orderItemRepo.DeleteByOrderIdAsync(orderId);
+            return await _orderRepo.DeleteAsync(orderId);
         }
     }
 }

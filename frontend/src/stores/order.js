@@ -60,6 +60,11 @@ export const useOrderStore = defineStore('order', () => {
     return response.data
   }
 
+  const remove = async (id) => {
+    await orderApi.delete(id)
+    await fetchAll()
+  }
+
   return {
     orders,
     loading,
@@ -69,6 +74,7 @@ export const useOrderStore = defineStore('order', () => {
     fetchPaging,
     create,
     getById,
-    update
+    update,
+    remove
   }
 })

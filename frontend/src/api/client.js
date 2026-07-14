@@ -80,14 +80,20 @@ export const stockApi = {
 export const inwardApi = {
   getAll: () => apiClient.get('/Business/api/inwards'),
   getPaging: (filter) => apiClient.get('/Business/api/inwards/paging', { params: filter }),
-  create: (data) => apiClient.post('/Business/api/inwards', data)
+  getById: (id) => apiClient.get(`/Business/api/inwards/${id}`),
+  create: (data) => apiClient.post('/Business/api/inwards', data),
+  update: (id, data) => apiClient.put(`/Business/api/inwards/${id}`, data),
+  delete: (id) => apiClient.delete(`/Business/api/inwards/${id}`)
 }
 
 // Outward API
 export const outwardApi = {
   getAll: () => apiClient.get('/Business/api/outwards'),
   getPaging: (filter) => apiClient.get('/Business/api/outwards/paging', { params: filter }),
-  create: (data) => apiClient.post('/Business/api/outwards', data)
+  getById: (id) => apiClient.get(`/Business/api/outwards/${id}`),
+  create: (data) => apiClient.post('/Business/api/outwards', data),
+  update: (id, data) => apiClient.put(`/Business/api/outwards/${id}`, data),
+  delete: (id) => apiClient.delete(`/Business/api/outwards/${id}`)
 }
 
 // Order API
@@ -96,7 +102,8 @@ export const orderApi = {
   getPaging: (filter) => apiClient.get('/Order/api/orders/paging', { params: filter }),
   getById: (id) => apiClient.get(`/Order/api/orders/${id}`),
   create: (data) => apiClient.post('/Order/api/orders', data),
-  update: (id, data) => apiClient.put(`/Order/api/orders/${id}`, data)
+  update: (id, data) => apiClient.put(`/Order/api/orders/${id}`, data),
+  delete: (id) => apiClient.delete(`/Order/api/orders/${id}`)
 }
 
 // Product Prices API

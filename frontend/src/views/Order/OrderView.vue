@@ -33,15 +33,16 @@
         :items="orderStore.orders"
         :search="search"
         :loading="orderStore.loading"
-        @click:row="(event, { item }) => openDetailDialog(item)"
       >
         <template v-slot:item.total_amount="{ item }">
           {{ formatCurrency(item.total_amount) }}
         </template>
-        <template v-slot:item.status="{ item }">
-          <v-chip :color="getStatusColor(item.status)" size="small">
-            {{ item.status }}
-          </v-chip>
+        <template v-slot:item.order_date="{ item }">
+          {{ formatDate(item.order_date) }}
+        </template>
+        <template v-slot:item.actions="{ item }">
+          <v-icon size="small" class="mr-2" @click="openDetailDialog(item)">mdi-pencil</v-icon>
+          <v-icon size="small" @click="confirmDelete(item)">mdi-delete</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -83,15 +84,44 @@
                 </template>
                 <v-list-item-title>{{ getProductName(item.product_id) }}</v-list-item-title>
                 <v-list-item-subtitle>
-                  {{ item.quantity }} x {{ formatCurrency(item.unit_price) }}
-                  <span v-if="getStock(item.product_id)" class="ml-2 text-caption" :class="getStock(item.product_id) > 0 ? 'text-success' : 'text-error'">
-                    (Tồn: {{ getStock(item.product_id) }})
+                  <span class="text-caption" :class="getStock(item.product_id) > 0 ? 'text-success' : 'text-error'">
+                    Tồn: {{ getStock(item.product_id) }}
                   </span>
                 </v-list-item-subtitle>
                 <template v-slot:append>
-                  <v-btn icon size="small" color="error" @click="removeItem(index)">
-                    <v-icon>mdi-delete</v-icon>
-                  </v-btn>
+                  <div class="d-flex align-center" style="gap: 8px;">
+                    <v-text-field
+                      :model-value="item.quantity"
+                      :data-testid="`item-row-qty-${index}`"
+                      label="SL"
+                      density="compact"
+                      variant="outlined"
+                      type="number"
+                      min="1"
+                      :max="getMaxQuantity(item.product_id)"
+                      hide-details
+                      style="width: 90px;"
+                      @update:model-value="(v) => updateItemField(item, 'quantity', v)"
+                    ></v-text-field>
+                    <v-text-field
+                      :model-value="item.unit_price"
+                      :data-testid="`item-row-price-${index}`"
+                      label="Giá"
+                      density="compact"
+                      variant="outlined"
+                      type="number"
+                      min="0"
+                      hide-details
+                      style="width: 120px;"
+                      @update:model-value="(v) => updateItemField(item, 'unit_price', v)"
+                    ></v-text-field>
+                    <span class="text-caption ml-1" style="min-width: 90px;">
+                      = {{ formatCurrency(item.quantity * item.unit_price) }}
+                    </span>
+                    <v-btn icon size="small" color="error" @click="removeItem(index)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
                 </template>
               </v-list-item>
             </v-list>
@@ -123,7 +153,7 @@
                       :max="getMaxQuantity(selectedProduct?.product_id)"
                       data-testid="item-qty-input"
                       @keydown="onCreateQtyKey"
-                      @update:model-value="onItemInputChange"
+                      @keydown.enter="addItem"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6" sm="2">
@@ -133,7 +163,6 @@
                       variant="outlined"
                       density="compact"
                       type="number"
-                      @update:model-value="onItemInputChange"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="12" sm="2" class="d-flex align-center">
@@ -170,7 +199,7 @@
     <!-- Order Detail Dialog -->
     <v-dialog v-model="detailDialog" max-width="700" eager>
       <v-card>
-        <v-card-title>{{ isEditMode ? 'Sửa đơn hàng' : 'Chi tiết đơn hàng' }}</v-card-title>
+        <v-card-title>Chi tiết đơn hàng</v-card-title>
         <v-card-text>
           <v-form ref="detailForm">
             <v-select
@@ -180,8 +209,6 @@
               item-value="customer_id"
               label="Khách hàng"
               variant="outlined"
-              :readonly="!isEditMode"
-              :disabled="!isEditMode"
             ></v-select>
 
             <v-select
@@ -195,6 +222,14 @@
               @update:model-value="onEditStockChange"
             ></v-select>
 
+            <v-text-field
+              :model-value="formatDate(detailData.order_date)"
+              label="Ngày đặt"
+              variant="outlined"
+              readonly
+              disabled
+            ></v-text-field>
+
             <v-divider class="my-4"></v-divider>
             <h4>Chi tiết đơn hàng</h4>
 
@@ -204,10 +239,10 @@
                   <span class="mr-2">{{ index + 1 }}.</span>
                 </template>
                 <v-list-item-title>{{ getProductName(item.product_id) }}</v-list-item-title>
-                <v-list-item-subtitle v-if="!isEditMode">
-                  {{ item.quantity }} x {{ formatCurrency(item.unit_price) }}
+                <v-list-item-subtitle>
+                  Thành tiền: <strong>{{ formatCurrency(item.quantity * item.unit_price) }}</strong>
                 </v-list-item-subtitle>
-                <template v-slot:append v-if="isEditMode">
+                <template v-slot:append>
                   <div class="d-flex align-center" style="gap: 8px;">
                     <v-text-field
                       :model-value="item.quantity"
@@ -243,7 +278,7 @@
               </v-list-item>
             </v-list>
 
-            <v-row v-if="isEditMode">
+            <v-row>
               <v-col cols="12" sm="5">
                 <v-select
                   v-model="selectedProduct"
@@ -289,12 +324,22 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="closeDetailDialog">Hủy</v-btn>
-          <v-btn v-if="!isEditMode" color="primary" data-testid="btn-start-edit" @click="startEditMode">
-            Sửa
-          </v-btn>
-          <v-btn v-else color="primary" @click="saveEdit" :loading="saving" :disabled="detailData.items.length === 0">
+          <v-btn color="primary" data-testid="btn-save-edit" @click="saveEdit" :loading="saving" :disabled="!detailData.items || detailData.items.length === 0">
             Lưu
           </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete Confirmation -->
+    <v-dialog v-model="deleteDialog" max-width="400">
+      <v-card>
+        <v-card-title>Xác nhận xóa</v-card-title>
+        <v-card-text>Bạn có chắc chắn muốn xóa đơn hàng này?</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="deleteDialog = false">Hủy</v-btn>
+          <v-btn color="error" @click="deleteOrder" :loading="deleting">Xóa</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -308,6 +353,7 @@ import { useCustomerStore } from '@/stores/customer'
 import { useProductStore } from '@/stores/product'
 import { useStockStore } from '@/stores/stock'
 import { productPricesApi } from '@/api/client'
+import { formatDate } from '@/utils/date'
 
 const orderStore = useOrderStore()
 const customerStore = useCustomerStore()
@@ -317,8 +363,11 @@ const stockStore = useStockStore()
 const search = ref('')
 const dialog = ref(false)
 const detailDialog = ref(false)
+const deleteDialog = ref(false)
 const saving = ref(false)
+const deleting = ref(false)
 const form = ref(null)
+const selectedItem = ref(null)
 
 const customers = ref([])
 const products = ref([])
@@ -330,7 +379,6 @@ const itemPrice = ref(0)
 const currentStock = ref(0)
 const productStocks = ref({})
 
-const isEditMode = ref(false)
 const detailData = ref({
   order_id: null,
   customer_id: '',
@@ -345,9 +393,10 @@ const detailData = ref({
 const headers = [
   { title: 'Mã đơn', key: 'order_code' },
   { title: 'Khách hàng', key: 'customer_name' },
+  { title: 'Kho', key: 'stock_name' },
   { title: 'Ngày đặt', key: 'order_date' },
   { title: 'Tổng tiền', key: 'total_amount' },
-  { title: 'Trạng thái', key: 'status' }
+  { title: 'Thao tác', key: 'actions', sortable: false }
 ]
 
 const formData = ref({
@@ -358,16 +407,6 @@ const formData = ref({
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0)
-}
-
-const getStatusColor = (status) => {
-  const colors = {
-    'pending': 'warning',
-    'completed': 'success',
-    'cancelled': 'error',
-    'processing': 'info'
-  }
-  return colors[status?.toLowerCase()] || 'grey'
 }
 
 const calculateTotal = computed(() => {
@@ -450,13 +489,6 @@ const onEditStockChange = async (stockId) => {
   await refetchAllStocks(stockId)
 }
 
-const onItemInputChange = () => {
-  // Auto-add when all fields are filled and valid
-  if (canAddItem.value) {
-    addItem()
-  }
-}
-
 const onCreateQtyKey = (event) => {
   if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
   event.preventDefault()
@@ -517,7 +549,18 @@ const removeDetailItem = (index) => {
 
 const updateItemField = (item, field, value) => {
   const num = Number(value)
-  item[field] = Number.isFinite(num) ? num : 0
+  if (!Number.isFinite(num)) return
+  if (field === 'quantity') {
+    const oldQty = item.quantity || 0
+    const newQty = Math.max(0, num)
+    item.quantity = newQty
+    // Đồng bộ productStocks: hoàn lại qty cũ, trừ qty mới
+    const stockKey = item.product_id
+    const base = productStocks.value[stockKey] || 0
+    productStocks.value[stockKey] = base + oldQty - newQty
+  } else {
+    item[field] = num
+  }
 }
 
 const clampQty = (value, maxQty) => {
@@ -572,7 +615,7 @@ const handleKeydown = (e) => {
   if (e.key === '+' || e.key === 'k' || e.key === 'K') {
     if (dialog.value) {
       addItem()
-    } else if (detailDialog.value && isEditMode.value) {
+    } else if (detailDialog.value) {
       addDetailItem()
     }
   }
@@ -628,6 +671,7 @@ const saveOrder = async () => {
     saving.value = true
     const orderData = {
       customer_id: formData.value.customer_id,
+      stock_id: formData.value.stock_id,
       items: formData.value.items.map(item => ({
         product_id: item.product_id,
         quantity: item.quantity,
@@ -660,7 +704,6 @@ const openDetailDialog = async (item) => {
       order_date: order.order_date,
       items: order.items || []
     }
-    isEditMode.value = false
     detailDialog.value = true
     if (defaultStockId) {
       await refetchAllStocks(defaultStockId)
@@ -670,12 +713,7 @@ const openDetailDialog = async (item) => {
   }
 }
 
-const startEditMode = () => {
-  isEditMode.value = true
-}
-
 const closeDetailDialog = () => {
-  isEditMode.value = false
   detailDialog.value = false
   selectedProduct.value = null
   itemQuantity.value = 1
@@ -693,11 +731,28 @@ const saveEdit = async () => {
     }))
     await orderStore.update(order_id, data)
     detailDialog.value = false
-    isEditMode.value = false
   } catch (err) {
     console.error('Failed to update order:', err)
   } finally {
     saving.value = false
+  }
+}
+
+const confirmDelete = (item) => {
+  selectedItem.value = item
+  deleteDialog.value = true
+}
+
+const deleteOrder = async () => {
+  try {
+    deleting.value = true
+    await orderStore.remove(selectedItem.value.order_id)
+    deleteDialog.value = false
+  } catch (err) {
+    console.error('Failed to delete order:', err)
+    alert(err.response?.data?.message || 'Lỗi khi xóa đơn hàng')
+  } finally {
+    deleting.value = false
   }
 }
 </script>

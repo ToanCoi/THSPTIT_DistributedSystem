@@ -128,15 +128,95 @@ namespace BE.Application.Services.Inward
             return MapToDto(inward);
         }
 
+        /// <inheritdoc />
+        public async Task<InwardDto> UpdateAsync(Guid inwardId, InwardUpdateDto dto)
+        {
+            var existing = await _inwardRepo.GetByIdAsync(inwardId);
+            if (existing == null)
+            {
+                throw new BusinessException("Không tìm thấy phiếu nhập", 404);
+            }
+
+            // Lưu giá trị cũ để tính delta cho ledger
+            var oldProductId = existing.product_id;
+            var oldStockId = existing.stock_id;
+            var oldQuantity = existing.quantity;
+
+            // Cập nhật entity
+            existing.product_id = dto.product_id;
+            existing.stock_id = dto.stock_id;
+            existing.quantity = dto.quantity;
+            existing.unit_price = dto.unit_price;
+            existing.selling_price = dto.selling_price;
+            existing.supplier = dto.supplier;
+            existing.invoice_date = dto.invoice_date;
+
+            await _inwardRepo.UpdateAsync(existing);
+
+            // Publish ledger-change với event_type=UPDATE để LedgerWorker tính delta
+            var ledgerMsg = new LedgerChangeMessage
+            {
+                voucher_id = existing.inward_id.ToString(),
+                voucher_type = "INWARD",
+                product_id = existing.product_id.ToString(),
+                stock_id = existing.stock_id.ToString(),
+                quantity = existing.quantity,
+                timestamp = DateTime.UtcNow.ToString("o"),
+                event_type = "UPDATE",
+                old_quantity = oldQuantity,
+                old_product_id = oldProductId.ToString(),
+                old_stock_id = oldStockId.ToString()
+            };
+            var json = System.Text.Json.JsonSerializer.Serialize(ledgerMsg);
+            await _kafkaProducer.ProduceAsync(_ledgerTopic, existing.inward_id.ToString(), json);
+
+            _logger.LogInformation("Cập nhật phiếu nhập [{inward_id}]", existing.inward_id);
+            return MapToDto(existing);
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> RemoveAsync(Guid inwardId)
+        {
+            var existing = await _inwardRepo.GetByIdAsync(inwardId);
+            if (existing == null)
+            {
+                throw new BusinessException("Không tìm thấy phiếu nhập", 404);
+            }
+
+            // Publish ledger UPDATE với quantity=0 để LedgerWorker reverse entries cũ
+            var ledgerMsg = new LedgerChangeMessage
+            {
+                voucher_id = existing.inward_id.ToString(),
+                voucher_type = "INWARD",
+                product_id = existing.product_id.ToString(),
+                stock_id = existing.stock_id.ToString(),
+                quantity = 0,
+                timestamp = DateTime.UtcNow.ToString("o"),
+                event_type = "UPDATE",
+                old_quantity = existing.quantity,
+                old_product_id = existing.product_id.ToString(),
+                old_stock_id = existing.stock_id.ToString()
+            };
+            var json = System.Text.Json.JsonSerializer.Serialize(ledgerMsg);
+            await _kafkaProducer.ProduceAsync(_ledgerTopic,
+                existing.inward_id.ToString(), json);
+
+            _logger.LogInformation("Xóa phiếu nhập [{inward_id}]", existing.inward_id);
+            return await _inwardRepo.DeleteAsync(inwardId);
+        }
+
         private InwardDto MapToDto(InwardEntity inward)
         {
             return new InwardDto
             {
                 inward_id = inward.inward_id,
                 product_id = inward.product_id,
+                product_name = inward.product_name,
                 stock_id = inward.stock_id,
+                stock_name = inward.stock_name,
                 quantity = inward.quantity,
                 unit_price = inward.unit_price,
+                selling_price = inward.selling_price,
                 supplier = inward.supplier,
                 invoice_date = inward.invoice_date,
                 created_date = inward.created_date

@@ -23,10 +23,6 @@ dependencies:
     version: 0.1.0
     repository: file://../order-api
     condition: order-api.enabled
-  - name: handle-worker
-    version: 0.1.0
-    repository: file://../handle-worker
-    condition: handle-worker.enabled
   - name: ledger-worker
     version: 0.1.0
     repository: file://../ledger-worker

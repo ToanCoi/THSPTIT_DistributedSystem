@@ -61,5 +61,26 @@ namespace BusinessApi.Controllers
             var result = await _inwardService.CreateAsync(dto);
             return Created($"/api/inwards/{result.inward_id}", result);
         }
+
+        /// <summary>
+        /// Cập nhật phiếu nhập
+        /// </summary>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] InwardUpdateDto dto)
+        {
+            var result = await _inwardService.UpdateAsync(id, dto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Xóa phiếu nhập (publish ledger UPDATE quantity=0 để reverse, rồi xóa)
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var result = await _inwardService.RemoveAsync(id);
+            if (!result) return NotFound();
+            return NoContent();
+        }
     }
 }

@@ -39,6 +39,11 @@ namespace BE.Application.Contracts.Interfaces.Order
         /// Cập nhật đơn hàng đầy đủ
         /// </summary>
         Task<OrderDto> UpdateAsync(Guid orderId, OrderCreateDto dto);
+
+        /// <summary>
+        /// Xóa đơn hàng (cùng chi tiết đơn hàng)
+        /// </summary>
+        Task<bool> RemoveAsync(Guid orderId);
     }
 
     /// <summary>
@@ -48,6 +53,9 @@ namespace BE.Application.Contracts.Interfaces.Order
     {
         public Guid order_id { get; set; }
         public Guid customer_id { get; set; }
+        public string? customer_name { get; set; }
+        public Guid stock_id { get; set; }
+        public string? stock_name { get; set; }
         public string order_code { get; set; }
         public decimal total_amount { get; set; }
         public string status { get; set; }

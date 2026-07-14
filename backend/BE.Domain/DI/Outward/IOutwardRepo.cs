@@ -26,8 +26,28 @@ namespace BE.Domain.DI.Outward
         Task<bool> InsertAsync(OutwardEntity outward);
 
         /// <summary>
+        /// Cập nhật phiếu xuất
+        /// </summary>
+        Task<bool> UpdateAsync(OutwardEntity outward);
+
+        /// <summary>
         /// Lấy giá xuất gần nhất của sản phẩm (giá bán)
         /// </summary>
         Task<decimal?> GetLatestOutwardPriceAsync(Guid productId);
+
+        /// <summary>
+        /// Lấy các phiếu xuất gắn với đơn hàng (dùng cho cascade delete Order)
+        /// </summary>
+        Task<IEnumerable<OutwardEntity>> GetByOrderIdAsync(Guid orderId);
+
+        /// <summary>
+        /// Xóa phiếu xuất theo ID
+        /// </summary>
+        Task<bool> DeleteAsync(Guid outwardId);
+
+        /// <summary>
+        /// Xóa tất cả phiếu xuất gắn với đơn hàng (dùng cho cascade delete Order)
+        /// </summary>
+        Task<bool> DeleteByOrderIdAsync(Guid orderId);
     }
 }

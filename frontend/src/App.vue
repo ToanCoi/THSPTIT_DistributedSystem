@@ -32,7 +32,6 @@
     </v-main>
 
     <v-footer app class="text-center d-flex justify-center">
-      <span>&copy; 2024 Hệ thống Phân tán - Microservice</span>
     </v-footer>
   </v-app>
 </template>

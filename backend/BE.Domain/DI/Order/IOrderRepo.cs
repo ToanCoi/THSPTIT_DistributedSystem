@@ -34,6 +34,16 @@ namespace BE.Domain.DI.Order
         /// Cập nhật đơn hàng
         /// </summary>
         Task<bool> UpdateAsync(OrderEntity order);
+
+        /// <summary>
+        /// Xóa đơn hàng theo ID
+        /// </summary>
+        Task<bool> DeleteAsync(Guid orderId);
+
+        /// <summary>
+        /// Lấy và tăng giá trị tiếp theo của sequence order_code (atomic với row lock)
+        /// </summary>
+        Task<long> GetNextOrderCodeAsync();
     }
 
     /// <summary>

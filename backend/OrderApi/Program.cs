@@ -1,6 +1,7 @@
 using BE.Application.Contracts.Interfaces.Order;
 using BE.Application.Services.Order;
 using BE.Domain.DI.Order;
+using BE.Domain.DI.Outward;
 using BE.Domain.Mysql;
 using BE.Domain.Repos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,6 +10,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using System.Text;
+using Workers.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,8 +69,16 @@ builder.Services.AddScoped<IBaseRepo>(sp => new DapperRepo(connectionString));
 builder.Services.AddScoped<IOrderRepo>(sp => new OrderRepo(connectionString));
 builder.Services.AddScoped<IOrderItemRepo>(sp => new OrderItemRepo(connectionString));
 
+// Đăng ký repo + Kafka producer (dùng cho cascade delete Order → Outward)
+builder.Services.AddScoped<IOutwardRepo>(sp => new OutwardRepo(connectionString));
+
 // Đăng ký services
 builder.Services.AddScoped<IOrderService, OrderService>();
+
+// Kafka producer dùng chung để publish ledger-change khi cascade delete
+var kafkaBootstrap = builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9093";
+builder.Services.AddSingleton<IKafkaProducerService>(sp =>
+    new KafkaProducerService(kafkaBootstrap, sp.GetRequiredService<ILogger<KafkaProducerService>>()));
 
 // Add controllers
 builder.Services.AddControllers();

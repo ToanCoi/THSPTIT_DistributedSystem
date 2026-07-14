@@ -11,9 +11,6 @@ dependencies:
 - name: order-api
   repository: file://../order-api
   version: 0.1.0
-- name: handle-worker
-  repository: file://../handle-worker
-  version: 0.1.0
 - name: ledger-worker
   repository: file://../ledger-worker
   version: 0.1.0
@@ -32,5 +29,5 @@ dependencies:
 - name: kafka
   repository: https://charts.bitnami.com/bitnami
   version: 22.1.5
-digest: sha256:5628485cb6c2d87a97b85fb6500afeab333889757047b629ae5a5b02d2f8c15f
-generated: "2026-06-21T16:28:45.8665139+07:00"
+digest: sha256:67a859c5e67f2e03522bddd74deb6d243a122e57b4410f93a6bf90002da9a611
+generated: "2026-07-14T00:21:19.0991377+07:00"

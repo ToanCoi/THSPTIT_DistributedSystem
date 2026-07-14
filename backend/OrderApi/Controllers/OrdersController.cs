@@ -98,6 +98,19 @@ namespace OrderApi.Controllers
             var result = await _orderService.UpdateAsync(id, dto);
             return Ok(result);
         }
+
+        /// <summary>
+        /// Xóa đơn hàng (cùng chi tiết đơn hàng)
+        /// </summary>
+        /// <param name="id">ID đơn hàng</param>
+        /// <returns>204 No Content nếu xóa thành công</returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var result = await _orderService.RemoveAsync(id);
+            if (!result) return NotFound();
+            return NoContent();
+        }
     }
 
     /// <summary>

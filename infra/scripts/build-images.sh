@@ -26,7 +26,6 @@ build api-gateway     backend  backend/ApiGateway/Dockerfile
 build auth-api        backend  backend/AuthApi/Dockerfile
 build business-api    backend  backend/BusinessApi/Dockerfile
 build order-api       backend  backend/OrderApi/Dockerfile
-build handle-worker   backend  backend/HandleWorker/Dockerfile
 build ledger-worker   backend  backend/Workers/LedgerWorker/Dockerfile
 build voucher-worker  backend  backend/Workers/VoucherWorker/Dockerfile
 
@@ -34,4 +33,4 @@ build voucher-worker  backend  backend/Workers/VoucherWorker/Dockerfile
 build frontend        frontend frontend/Dockerfile
 
 echo "[build-images] Hoàn tất. Danh sách images:"
-docker images | grep -E "ecom/(api-gateway|auth-api|business-api|order-api|handle-worker|ledger-worker|voucher-worker|frontend)"
+docker images | grep -E "ecom/(api-gateway|auth-api|business-api|order-api|ledger-worker|voucher-worker|frontend)"

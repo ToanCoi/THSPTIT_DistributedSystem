@@ -23,7 +23,10 @@ resources:
 env:
   ASPNETCORE_ENVIRONMENT: "Production"
   ASPNETCORE_URLS: "http://+:80"
-  ConnectionStrings__Default: "Server=ecom-stack-mysqlmaster.ecom.svc.cluster.local;Port=3306;Database=master_db;User=root;Password=P@ssw0rd123;"
+  # Trỏ vào MySQL local trên Windows host (xem infra/charts/ecom-stack/values.yaml → global.localMysql).
+  # Helm không render Go template trong values.yaml, nên phải hardcode ở đây.
+  # ROLLBACK: Server=ecom-stack-mysqlmaster.ecom.svc.cluster.local;Port=3306;Database=master_db;User=root;Password=P@ssw0rd123;
+  ConnectionStrings__Default: "Server=host.minikube.internal;Port=3306;Database=master_db;User=root;Password=Mysql!110720;"
 
 envFromSecret:
   Jwt__SecretKey: "jwt-secret-key"

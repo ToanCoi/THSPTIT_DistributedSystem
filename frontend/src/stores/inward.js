@@ -49,6 +49,17 @@ export const useInwardStore = defineStore('inward', () => {
     return response.data
   }
 
+  const update = async (id, data) => {
+    const response = await inwardApi.update(id, data)
+    await fetchAll()
+    return response.data
+  }
+
+  const remove = async (id) => {
+    await inwardApi.delete(id)
+    await fetchAll()
+  }
+
   return {
     inwards,
     loading,
@@ -56,6 +67,8 @@ export const useInwardStore = defineStore('inward', () => {
     pagination,
     fetchAll,
     fetchPaging,
-    create
+    create,
+    update,
+    remove
   }
 })

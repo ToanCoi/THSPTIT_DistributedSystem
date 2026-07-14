@@ -1,5 +1,14 @@
 global:
   imageTag: "v1.0.0-local"
+  # MySQL chạy ngoài cluster (trên Windows host) - 6 service sẽ trỏ vào đây.
+  # host.minikube.internal là DNS đặc biệt của minikube Docker driver, resolve về host.
+  localMysql:
+    host: "host.minikube.internal"
+    port: 3306
+    user: "root"
+    password: "Mysql!110720"
+    masterDb: "master_db"
+    businessDb: "business_db"
 
 # Bật/tắt từng service qua flag
 api-gateway:
@@ -14,9 +23,6 @@ business-api:
 order-api:
   enabled: true
 
-handle-worker:
-  enabled: true
-
 ledger-worker:
   enabled: true
 
@@ -26,10 +32,10 @@ voucher-worker:
 frontend:
   enabled: true
 
-# MySQL: 2 instance tách biệt (master_db + business_db)
-# alias trong Chart.yaml đã lowercase (mysqlmaster / mysqlbusiness) để K8s chấp nhận
-mysql:
-  enabled: true
+# MySQL trong cluster đã TẮT — dùng local MySQL trên Windows host (xem global.localMysql).
+# Block dưới giữ lại (không xóa) để dễ rollback nếu cần bật lại.
+mysqlmaster:
+  enabled: false
   auth:
     rootPassword: "P@ssw0rd123"
     database: "master_db"
@@ -51,7 +57,7 @@ mysql:
 
 # MySQL business_db (alias mysqlbusiness trong Chart.yaml)
 mysqlbusiness:
-  enabled: true
+  enabled: false
   auth:
     rootPassword: "P@ssw0rd123"
     database: "business_db"
@@ -72,8 +78,10 @@ mysqlbusiness:
     tag: "8.0"
 
 # Kafka (KRaft mode - không cần Zookeeper)
+# TẮT chart Bitnami vì bitnami/kafka đã bị gỡ khỏi Docker Hub (late 2025).
+# Kafka được deploy riêng qua infra/k8s/kafka.yaml (image apache/kafka:3.8.1).
 kafka:
-  enabled: true
+  enabled: false
   kraft:
     enabled: true
   replicaCount: 1

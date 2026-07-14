@@ -49,6 +49,17 @@ export const useOutwardStore = defineStore('outward', () => {
     return response.data
   }
 
+  const update = async (id, data) => {
+    const response = await outwardApi.update(id, data)
+    await fetchAll()
+    return response.data
+  }
+
+  const remove = async (id) => {
+    await outwardApi.delete(id)
+    await fetchAll()
+  }
+
   return {
     outwards,
     loading,
@@ -56,6 +67,8 @@ export const useOutwardStore = defineStore('outward', () => {
     pagination,
     fetchAll,
     fetchPaging,
-    create
+    create,
+    update,
+    remove
   }
 })
